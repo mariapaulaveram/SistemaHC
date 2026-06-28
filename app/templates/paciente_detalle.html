@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+    <a href="/">← Volver al inicio</a>
+    <h1>Ficha de: {{ paciente.nombre }}</h1>
+    <div class="ficha">
+        <p><strong>DNI:</strong> {{ paciente.dni }}</p>
+        <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento }}</p>
+        <p><strong>Teléfono:</strong> {{ paciente.telefono }}</p>
+        <p><strong>Antecedentes:</strong> {{ paciente.antecedentes }}</p>
+    </div>
+</div>
+</body>
+</html>
+

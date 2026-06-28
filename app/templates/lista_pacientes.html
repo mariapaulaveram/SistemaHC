@@ -1,0 +1,6 @@
+{% for p in pacientes %}
+<li>
+    <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a> - {{ p.dni }}
+</li>
+{% endfor %}
+

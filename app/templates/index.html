@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Bienvenida, Dra.</h1>
+    <div class="stats">
+        <div class="card">Total de Pacientes: <b>{{ total_pacientes }}</b></div>
+    </div>
+    
+    <h2 style="margin-top: 30px;">Pacientes Recientes</h2>
+    <div id="lista-pacientes" hx-get="/pacientes/lista" hx-trigger="load">
+        </div>
+{% endblock %}

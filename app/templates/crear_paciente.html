@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/forms.css') }}">
+{% endblock %}
+{% block content %}
+    <h1>Registrar Nuevo Paciente</h1>
+    <form hx-post="/pacientes/guardar" hx-target="#mensaje" hx-on::after-request="this.reset()"> 
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="dni" placeholder="DNI" required>
+        <input type="date" name="fecha_nacimiento">
+        <input type="text" name="telefono" placeholder="Teléfono">
+        <textarea name="antecedentes" placeholder="Antecedentes médicos"></textarea>
+        <button type="submit">Guardar Paciente</button>
+    </form>
+    <div id="mensaje"></div>
+{% endblock %}
+

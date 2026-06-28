@@ -1,0 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --color-bg: #F4F6F9;
+    --color-surface: #FFFFFF;
+    --color-ink: #1A2733;
+    --color-muted: #5C6B7A;
+    --color-border: #DDE3E9;
+
+    --color-primary: #1A5C96;
+    --color-primary-dark: #123F69;
+    --color-primary-light: #E8F1F9;
+
+    --color-danger: #A4332A;
+    --color-danger-bg: #FBEAE8;
+
+    --font-body: 'Inter', -apple-system, Segoe UI, sans-serif;
+
+    --radius: 6px;
+    --shadow-sm: 0 1px 2px rgba(20, 40, 60, 0.06);
+    --shadow-md: 0 2px 8px rgba(20, 40, 60, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    max-width: 900px; /* <--- Cambiado de 640px a 900px */
+    margin: 0 auto;   /* Quitamos el margen superior de 32px para que el nav pegue arriba */
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    line-height: 1.5;
+}
+
+h1 {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--color-primary-dark);
+    margin: 0 0 20px;
+    letter-spacing: -0.01em;
+}
+
+h2 {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--color-primary-dark);
+    margin: 0 0 14px;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.navbar {
+    background: #007bff;
+    padding: 1rem 2rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navbar ul { display: flex; list-style: none; gap: 20px; }
+.navbar a { color: white; text-decoration: none; font-weight: bold; }
+.container { max-width: 800px; margin: 20px auto; padding: 20px; }
+
+/* Formulario: borde superior marca "estas creando algo nuevo" */
+form {
+    background: var(--color-surface);
+    padding: 22px 20px 18px;
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+input, textarea {
+    font-family: var(--font-body);
+    font-size: 0.93rem;
+    padding: 9px 11px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--color-muted);
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 70px;
+}
+
+button {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.93rem;
+    background-color: var(--color-primary);
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Tarjetas de pacientes en la lista */
+.paciente-card {
+    background: var(--color-surface);
+    padding: 13px 16px;
+    margin-top: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.paciente-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.paciente-card a {
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+.paciente-card a:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+/* Ficha de detalle: borde izquierdo marca "estas viendo un registro existente" */
+.container {
+    padding-top: 4px;
+}
+
+.container > a {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin-bottom: 16px;
+}
+
+.container > a:hover {
+    color: var(--color-primary);
+}
+
+.ficha {
+    background: var(--color-surface);
+    padding: 22px 24px;
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.ficha p {
+    margin: 10px 0;
+    font-size: 0.93rem;
+}
+
+.ficha p strong {
+    font-weight: 600;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: inline-block;
+    min-width: 150px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .paciente-card {
+        transition: none;
+    }
+}
