@@ -17,6 +17,13 @@
     </nav>
 
     <main class="container">
+        {% if flash_messages %}
+            <div class="flash-container">
+                {% for message in flash_messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 </body>

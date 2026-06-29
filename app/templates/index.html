@@ -1,11 +1,54 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>Bienvenida, Dra.</h1>
-    <div class="stats">
-        <div class="card">Total de Pacientes: <b>{{ total_pacientes }}</b></div>
-    </div>
-    
-    <h2 style="margin-top: 30px;">Pacientes Recientes</h2>
-    <div id="lista-pacientes" hx-get="/pacientes/lista" hx-trigger="load">
+    <section class="hero-section">
+        <div class="hero-copy">
+            <p class="eyebrow">Software Clínico Dermatológico</p>
+            <h1>Historias clínicas electrónicas para consultas dermatológicas modernas</h1>
+            <p>Gestiona tus pacientes, consultas y antecedentes con una interfaz clara, rápida y diseñada para profesionales de la salud.</p>
+            <div class="hero-actions">
+                <a href="/pacientes" class="btn-editar">Ir a pacientes</a>
+                <a href="/pacientes/nuevo" class="btn-secondary">Registrar paciente</a>
+            </div>
+            <form class="hero-search" method="get" action="/pacientes">
+                <input type="search" name="q" placeholder="Buscar paciente por nombre o DNI" aria-label="Buscar paciente">
+                <button type="submit" class="btn-editar">Buscar</button>
+            </form>
         </div>
+        <div class="hero-visual">
+            <div class="hero-card">
+                <p class="eyebrow">Gestión inteligente</p>
+                <h2>{{ total_pacientes }} pacientes y {{ total_consultas }} consultas registradas</h2>
+                <p>Accede rápidamente a tu historial clínico, filtra por tipo de piel y mantén el seguimiento de cada consulta.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <h2>Herramientas para tu práctica</h2>
+        <div class="feature-grid">
+            <article class="feature-card">
+                <h3>Historia clínica centralizada</h3>
+                <p>Un único lugar para ver datos personales, antecedentes y consultas previas de cada paciente.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Consultas rápidas</h3>
+                <p>Registra una nueva consulta en segundos y almacena diagnósticos, tratamientos y recomendaciones.</p>
+            </article>
+            <article class="feature-card">
+                <h3>Filtro inteligente</h3>
+                <p>Busca por nombre o DNI y filtra por tipo de piel o antecedentes clínicos.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="recent-section dashboard-card">
+        <div class="dashboard-header">
+            <div>
+                <h2>Pacientes recientes</h2>
+                <p class="muted">Revisión rápida de los últimos pacientes agregados</p>
+            </div>
+            <a href="/pacientes" class="btn-secondary">Ver todos</a>
+        </div>
+        <div id="lista-pacientes" hx-get="/pacientes/lista" hx-trigger="load"></div>
+    </section>
 {% endblock %}

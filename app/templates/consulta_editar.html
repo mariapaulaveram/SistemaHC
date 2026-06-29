@@ -1,70 +1,74 @@
 {% extends "base.html" %}
 {% block content %}
+    {% set form_data = form_data | default({}) %}
     <a href="/pacientes/{{ consulta.paciente_id }}">← Volver al paciente</a>
     <h1>Editar Consulta</h1>
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
     <form method="post" action="/consultas/{{ consulta.id }}/editar">
         <fieldset>
             <legend>Datos de la Consulta</legend>
             <label>Fecha</label>
-            <input type="date" name="fecha" value="{{ consulta.fecha }}" required>
+            <input type="date" name="fecha" value="{{ form_data.fecha | default(consulta.fecha) }}" required>
 
             <label>Motivo</label>
-            <input type="text" name="motivo" value="{{ consulta.motivo }}" required>
+            <input type="text" name="motivo" value="{{ form_data.motivo | default(consulta.motivo) }}" required>
 
             <label>Diagnóstico</label>
-            <input type="text" name="diagnostico" value="{{ consulta.diagnostico }}">
+            <input type="text" name="diagnostico" value="{{ form_data.diagnostico | default(consulta.diagnostico) }}">
         </fieldset>
 
         <fieldset>
             <legend>Descripción Clínica</legend>
             <label>Zona Afectada</label>
-            <input type="text" name="zona_afectada" value="{{ consulta.zona_afectada }}">
+            <input type="text" name="zona_afectada" value="{{ form_data.zona_afectada | default(consulta.zona_afectada) }}">
 
             <label>Tipo de Lesión</label>
             <select name="tipo_lesion">
                 <option value="">Seleccionar...</option>
-                <option value="papula" {% if consulta.tipo_lesion == 'papula' %}selected{% endif %}>Pápula</option>
-                <option value="placa" {% if consulta.tipo_lesion == 'placa' %}selected{% endif %}>Placa</option>
-                <option value="vesícula" {% if consulta.tipo_lesion == 'vesícula' %}selected{% endif %}>Vesícula</option>
-                <option value="pústula" {% if consulta.tipo_lesion == 'pústula' %}selected{% endif %}>Pústula</option>
-                <option value="mácula" {% if consulta.tipo_lesion == 'mácula' %}selected{% endif %}>Mácula</option>
-                <option value="erosión" {% if consulta.tipo_lesion == 'erosión' %}selected{% endif %}>Erosión</option>
-                <option value="otra" {% if consulta.tipo_lesion == 'otra' %}selected{% endif %}>Otra</option>
+                <option value="papula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'papula' %}selected{% endif %}>Pápula</option>
+                <option value="placa" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'placa' %}selected{% endif %}>Placa</option>
+                <option value="vesícula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'vesícula' %}selected{% endif %}>Vesícula</option>
+                <option value="pústula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'pústula' %}selected{% endif %}>Pústula</option>
+                <option value="mácula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'mácula' %}selected{% endif %}>Mácula</option>
+                <option value="erosión" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'erosión' %}selected{% endif %}>Erosión</option>
+                <option value="otra" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'otra' %}selected{% endif %}>Otra</option>
             </select>
 
             <label>Duración</label>
-            <input type="text" name="duracion" value="{{ consulta.duracion }}">
+            <input type="text" name="duracion" value="{{ form_data.duracion | default(consulta.duracion) }}">
 
             <label>Severidad</label>
             <select name="severidad">
                 <option value="">Seleccionar...</option>
-                <option value="leve" {% if consulta.severidad == 'leve' %}selected{% endif %}>Leve</option>
-                <option value="moderada" {% if consulta.severidad == 'moderada' %}selected{% endif %}>Moderada</option>
-                <option value="severa" {% if consulta.severidad == 'severa' %}selected{% endif %}>Severa</option>
+                <option value="leve" {% if (form_data.severidad | default(consulta.severidad)) == 'leve' %}selected{% endif %}>Leve</option>
+                <option value="moderada" {% if (form_data.severidad | default(consulta.severidad)) == 'moderada' %}selected{% endif %}>Moderada</option>
+                <option value="severa" {% if (form_data.severidad | default(consulta.severidad)) == 'severa' %}selected{% endif %}>Severa</option>
             </select>
 
             <label>Evolución</label>
             <select name="evolucion">
                 <option value="">Seleccionar...</option>
-                <option value="mejorando" {% if consulta.evolucion == 'mejorando' %}selected{% endif %}>Mejorando</option>
-                <option value="estable" {% if consulta.evolucion == 'estable' %}selected{% endif %}>Estable</option>
-                <option value="empeorando" {% if consulta.evolucion == 'empeorando' %}selected{% endif %}>Empeorando</option>
+                <option value="mejorando" {% if (form_data.evolucion | default(consulta.evolucion)) == 'mejorando' %}selected{% endif %}>Mejorando</option>
+                <option value="estable" {% if (form_data.evolucion | default(consulta.evolucion)) == 'estable' %}selected{% endif %}>Estable</option>
+                <option value="empeorando" {% if (form_data.evolucion | default(consulta.evolucion)) == 'empeorando' %}selected{% endif %}>Empeorando</option>
             </select>
 
             <label>Observaciones Clínicas</label>
-            <textarea name="observaciones_clinicas">{{ consulta.observaciones_clinicas }}</textarea>
+            <textarea name="observaciones_clinicas">{{ form_data.observaciones_clinicas | default(consulta.observaciones_clinicas) }}</textarea>
         </fieldset>
 
         <fieldset>
             <legend>Tratamiento y Recomendaciones</legend>
             <label>Tratamiento</label>
-            <textarea name="tratamiento">{{ consulta.tratamiento }}</textarea>
+            <textarea name="tratamiento">{{ form_data.tratamiento | default(consulta.tratamiento) }}</textarea>
 
             <label>Recomendaciones</label>
-            <textarea name="recomendaciones">{{ consulta.recomendaciones }}</textarea>
+            <textarea name="recomendaciones">{{ form_data.recomendaciones | default(consulta.recomendaciones) }}</textarea>
 
             <label>Notas Adicionales</label>
-            <textarea name="notas">{{ consulta.notas }}</textarea>
+            <textarea name="notas">{{ form_data.notas | default(consulta.notas) }}</textarea>
         </fieldset>
 
         <button type="submit">Guardar cambios</button>

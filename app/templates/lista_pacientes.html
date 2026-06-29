@@ -1,7 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
+    {% set search_params = search_params | default({}) %}
     <h1>Pacientes</h1>
     <a class="button" href="/pacientes/nuevo">Nuevo Paciente</a>
+
+    <form method="get" action="/pacientes" class="busqueda-filtros">
+        <div>
+            <label for="q">Buscar</label>
+            <input type="search" id="q" name="q" placeholder="Nombre o DNI" value="{{ search_params.q | default('') }}">
+        </div>
+        <div>
+            <label for="tipo_piel">Tipo de piel</label>
+            <select id="tipo_piel" name="tipo_piel">
+                <option value="">Todos</option>
+                <option value="clara" {% if search_params.tipo_piel == 'clara' %}selected{% endif %}>Piel Clara</option>
+                <option value="media" {% if search_params.tipo_piel == 'media' %}selected{% endif %}>Piel Media</option>
+                <option value="oscura" {% if search_params.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
+                <option value="muy_oscura" {% if search_params.tipo_piel == 'muy_oscura' %}selected{% endif %}>Muy oscura</option>
+            </select>
+        </div>
+        <div>
+            <label for="con_antecedentes">Antecedentes</label>
+            <select id="con_antecedentes" name="con_antecedentes">
+                <option value="">Todos</option>
+                <option value="1" {% if search_params.con_antecedentes == '1' %}selected{% endif %}>Con antecedentes</option>
+                <option value="0" {% if search_params.con_antecedentes == '0' %}selected{% endif %}>Sin antecedentes</option>
+            </select>
+        </div>
+        <div>
+            <label for="sort">Ordenar</label>
+            <select id="sort" name="sort">
+                <option value="nombre" {% if search_params.sort == 'nombre' %}selected{% endif %}>Nombre</option>
+                <option value="dni" {% if search_params.sort == 'dni' %}selected{% endif %}>DNI</option>
+                <option value="fecha_nacimiento" {% if search_params.sort == 'fecha_nacimiento' %}selected{% endif %}>Nacimiento</option>
+            </select>
+        </div>
+        <div>
+            <label for="order">Dirección</label>
+            <select id="order" name="order">
+                <option value="asc" {% if search_params.order == 'asc' %}selected{% endif %}>Ascendente</option>
+                <option value="desc" {% if search_params.order == 'desc' %}selected{% endif %}>Descendente</option>
+            </select>
+        </div>
+        <button type="submit">Aplicar</button>
+    </form>
+
     <ul class="pacientes-lista">
         {% for p in pacientes %}
         <li>

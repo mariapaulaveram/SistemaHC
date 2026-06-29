@@ -4,6 +4,7 @@
 {% endblock %}
 {% block content %}
     <h1>Registrar Nuevo Paciente</h1>
+    {% set form_data = form_data | default({}) %}
     {% if error %}
         <div class="error-message">{{ error }}</div>
     {% endif %}

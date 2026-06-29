@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+    <a href="/pacientes/{{ consulta.paciente_id }}">← Volver al paciente</a>
+    <h1>Consulta del {{ consulta.fecha }}</h1>
+
+    <section class="consulta-info">
+        <h2>Resumen</h2>
+        <p><strong>Motivo:</strong> {{ consulta.motivo }}</p>
+        <p><strong>Diagnóstico:</strong> {{ consulta.diagnostico or 'No informado' }}</p>
+        <p><strong>Zona afectada:</strong> {{ consulta.zona_afectada or '-' }}</p>
+        <p><strong>Tipo de lesión:</strong> {{ consulta.tipo_lesion or '-' }}</p>
+        <p><strong>Duración:</strong> {{ consulta.duracion or '-' }}</p>
+        <p><strong>Severidad:</strong> {{ consulta.severidad or '-' }}</p>
+        <p><strong>Evolución:</strong> {{ consulta.evolucion or '-' }}</p>
+    </section>
+
+    <section class="consulta-detalle">
+        <h2>Observaciones Clínicas</h2>
+        <p>{{ consulta.observaciones_clinicas or 'No hay observaciones' }}</p>
+
+        <h2>Tratamiento</h2>
+        <p>{{ consulta.tratamiento or 'No informado' }}</p>
+
+        <h2>Recomendaciones</h2>
+        <p>{{ consulta.recomendaciones or 'No informado' }}</p>
+
+        <h2>Notas</h2>
+        <p>{{ consulta.notas or 'Sin notas' }}</p>
+    </section>
+
+    <div class="consulta-actions">
+        <a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar consulta</a>
+    </div>
+{% endblock %}

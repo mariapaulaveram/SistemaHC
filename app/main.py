@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from . import models
 from .database import engine, get_db
 from .routers import pacientes, consultas
+from .utils import render_template
 import os
 
 models.Base.metadata.create_all(bind=engine)
@@ -25,8 +26,20 @@ app.include_router(consultas.router)
 @app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
     total_pacientes = db.query(models.Paciente).count()
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"total_pacientes": total_pacientes},
+    total_consultas = db.query(models.Consulta).count()
+    recientes_pacientes = (
+        db.query(models.Paciente)
+        .order_by(models.Paciente.id.desc())
+        .limit(5)
+        .all()
+    )
+    return render_template(
+        templates,
+        request,
+        "index.html",
+        {
+            "total_pacientes": total_pacientes,
+            "total_consultas": total_consultas,
+            "recientes_pacientes": recientes_pacientes,
+        },
     )
