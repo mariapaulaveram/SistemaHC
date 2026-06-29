@@ -1,6 +1,16 @@
-{% for p in pacientes %}
-<li>
-    <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a> - {{ p.dni }}
-</li>
-{% endfor %}
+{% extends "base.html" %}
+{% block content %}
+    <h1>Pacientes</h1>
+    <a class="button" href="/pacientes/nuevo">Nuevo Paciente</a>
+    <ul class="pacientes-lista">
+        {% for p in pacientes %}
+        <li>
+            <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
+            <span>{{ p.dni }}</span>
+        </li>
+        {% else %}
+        <li>No hay pacientes registrados.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
 

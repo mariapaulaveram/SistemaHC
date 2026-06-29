@@ -4,14 +4,34 @@
 {% endblock %}
 {% block content %}
     <h1>Registrar Nuevo Paciente</h1>
-    <form hx-post="/pacientes/guardar" hx-target="#mensaje" hx-on::after-request="this.reset()"> 
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="text" name="dni" placeholder="DNI" required>
-        <input type="date" name="fecha_nacimiento">
-        <input type="text" name="telefono" placeholder="Teléfono">
-        <textarea name="antecedentes" placeholder="Antecedentes médicos"></textarea>
+    <form method="post" action="/pacientes/">
+        <fieldset>
+            <legend>Datos Personales</legend>
+            <input type="text" name="nombre" placeholder="Nombre Completo" required>
+            <input type="text" name="dni" placeholder="DNI" required>
+            <input type="date" name="fecha_nacimiento">
+            <input type="text" name="telefono" placeholder="Teléfono">
+        </fieldset>
+
+        <fieldset>
+            <legend>Datos Dermatológicos</legend>
+            <select name="tipo_piel">
+                <option value="">Seleccionar tipo de piel...</option>
+                <option value="clara">Piel Clara</option>
+                <option value="media">Piel Media</option>
+                <option value="oscura">Piel Oscura</option>
+                <option value="muy_oscura">Piel Muy Oscura</option>
+            </select>
+            <textarea name="alergias" placeholder="Alergias conocidas"></textarea>
+            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales"></textarea>
+        </fieldset>
+
+        <fieldset>
+            <legend>Antecedentes</legend>
+            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes"></textarea>
+        </fieldset>
+
         <button type="submit">Guardar Paciente</button>
     </form>
-    <div id="mensaje"></div>
 {% endblock %}
 

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+    <a href="/pacientes/{{ consulta.paciente_id }}">← Volver al paciente</a>
+    <h1>Editar Consulta</h1>
+    <form method="post" action="/consultas/{{ consulta.id }}/editar">
+        <fieldset>
+            <legend>Datos de la Consulta</legend>
+            <label>Fecha</label>
+            <input type="date" name="fecha" value="{{ consulta.fecha }}" required>
+
+            <label>Motivo</label>
+            <input type="text" name="motivo" value="{{ consulta.motivo }}" required>
+
+            <label>Diagnóstico</label>
+            <input type="text" name="diagnostico" value="{{ consulta.diagnostico }}">
+        </fieldset>
+
+        <fieldset>
+            <legend>Descripción Clínica</legend>
+            <label>Zona Afectada</label>
+            <input type="text" name="zona_afectada" value="{{ consulta.zona_afectada }}">
+
+            <label>Tipo de Lesión</label>
+            <select name="tipo_lesion">
+                <option value="">Seleccionar...</option>
+                <option value="papula" {% if consulta.tipo_lesion == 'papula' %}selected{% endif %}>Pápula</option>
+                <option value="placa" {% if consulta.tipo_lesion == 'placa' %}selected{% endif %}>Placa</option>
+                <option value="vesícula" {% if consulta.tipo_lesion == 'vesícula' %}selected{% endif %}>Vesícula</option>
+                <option value="pústula" {% if consulta.tipo_lesion == 'pústula' %}selected{% endif %}>Pústula</option>
+                <option value="mácula" {% if consulta.tipo_lesion == 'mácula' %}selected{% endif %}>Mácula</option>
+                <option value="erosión" {% if consulta.tipo_lesion == 'erosión' %}selected{% endif %}>Erosión</option>
+                <option value="otra" {% if consulta.tipo_lesion == 'otra' %}selected{% endif %}>Otra</option>
+            </select>
+
+            <label>Duración</label>
+            <input type="text" name="duracion" value="{{ consulta.duracion }}">
+
+            <label>Severidad</label>
+            <select name="severidad">
+                <option value="">Seleccionar...</option>
+                <option value="leve" {% if consulta.severidad == 'leve' %}selected{% endif %}>Leve</option>
+                <option value="moderada" {% if consulta.severidad == 'moderada' %}selected{% endif %}>Moderada</option>
+                <option value="severa" {% if consulta.severidad == 'severa' %}selected{% endif %}>Severa</option>
+            </select>
+
+            <label>Evolución</label>
+            <select name="evolucion">
+                <option value="">Seleccionar...</option>
+                <option value="mejorando" {% if consulta.evolucion == 'mejorando' %}selected{% endif %}>Mejorando</option>
+                <option value="estable" {% if consulta.evolucion == 'estable' %}selected{% endif %}>Estable</option>
+                <option value="empeorando" {% if consulta.evolucion == 'empeorando' %}selected{% endif %}>Empeorando</option>
+            </select>
+
+            <label>Observaciones Clínicas</label>
+            <textarea name="observaciones_clinicas">{{ consulta.observaciones_clinicas }}</textarea>
+        </fieldset>
+
+        <fieldset>
+            <legend>Tratamiento y Recomendaciones</legend>
+            <label>Tratamiento</label>
+            <textarea name="tratamiento">{{ consulta.tratamiento }}</textarea>
+
+            <label>Recomendaciones</label>
+            <textarea name="recomendaciones">{{ consulta.recomendaciones }}</textarea>
+
+            <label>Notas Adicionales</label>
+            <textarea name="notas">{{ consulta.notas }}</textarea>
+        </fieldset>
+
+        <button type="submit">Guardar cambios</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,10 @@
+<ul class="pacientes-lista">
+    {% for p in pacientes %}
+    <li>
+        <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
+        <span>{{ p.dni }}</span>
+    </li>
+    {% else %}
+    <li>No hay pacientes registrados.</li>
+    {% endfor %}
+</ul>

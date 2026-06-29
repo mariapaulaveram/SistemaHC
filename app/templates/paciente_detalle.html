@@ -1,19 +1,140 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-    <a href="/">← Volver al inicio</a>
-    <h1>Ficha de: {{ paciente.nombre }}</h1>
-    <div class="ficha">
-        <p><strong>DNI:</strong> {{ paciente.dni }}</p>
-        <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento }}</p>
-        <p><strong>Teléfono:</strong> {{ paciente.telefono }}</p>
-        <p><strong>Antecedentes:</strong> {{ paciente.antecedentes }}</p>
-    </div>
-</div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+    <a href="/pacientes">← Volver a Pacientes</a>
+    <h1>Ficha Clínica: {{ paciente.nombre }}</h1>
 
+    <section class="datos-personales">
+        <h2>Datos Personales</h2>
+        <p><strong>DNI:</strong> {{ paciente.dni }}</p>
+        <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento or 'No informada' }}</p>
+        <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No informado' }}</p>
+    </section>
+
+    <section class="datos-dermatologicos">
+        <h2>Datos Dermatológicos</h2>
+        <p><strong>Tipo de Piel:</strong> {{ paciente.tipo_piel or 'No informado' }}</p>
+        <p><strong>Alergias:</strong> {{ paciente.alergias or 'No reportadas' }}</p>
+        <p><strong>Medicaciones Actuales:</strong> {{ paciente.medicaciones_actuales or 'Ninguna reportada' }}</p>
+        <p><strong>Antecedentes:</strong> {{ paciente.antecedentes or 'No reportados' }}</p>
+    </section>
+
+    <section class="consulta-form">
+        <h2>Agregar Consulta</h2>
+        <form method="post" action="/consultas/pacientes/{{ paciente.id }}">
+            <fieldset>
+                <legend>Datos de la Consulta</legend>
+                <label>Fecha *</label>
+                <input type="date" name="fecha" required>
+
+                <label>Motivo de Consulta *</label>
+                <input type="text" name="motivo" placeholder="Ej: lesión en brazo, picazón en cara" required>
+
+                <label>Diagnóstico</label>
+                <input type="text" name="diagnostico" placeholder="Ej: dermatitis, eczema, psoriasis">
+            </fieldset>
+
+            <fieldset>
+                <legend>Descripción Clínica</legend>
+                <label>Zona Afectada</label>
+                <input type="text" name="zona_afectada" placeholder="Ej: cara, brazos, pecho, piernas">
+
+                <label>Tipo de Lesión</label>
+                <select name="tipo_lesion">
+                    <option value="">Seleccionar...</option>
+                    <option value="papula">Pápula</option>
+                    <option value="placa">Placa</option>
+                    <option value="vesícula">Vesícula</option>
+                    <option value="pústula">Pústula</option>
+                    <option value="mácula">Mácula</option>
+                    <option value="erosión">Erosión</option>
+                    <option value="otra">Otra</option>
+                </select>
+
+                <label>Duración</label>
+                <input type="text" name="duracion" placeholder="Ej: 3 días, 2 semanas, 1 mes">
+
+                <label>Severidad</label>
+                <select name="severidad">
+                    <option value="">Seleccionar...</option>
+                    <option value="leve">Leve</option>
+                    <option value="moderada">Moderada</option>
+                    <option value="severa">Severa</option>
+                </select>
+
+                <label>Evolución</label>
+                <select name="evolucion">
+                    <option value="">Seleccionar...</option>
+                    <option value="mejorando">Mejorando</option>
+                    <option value="estable">Estable</option>
+                    <option value="empeorando">Empeorando</option>
+                </select>
+
+                <label>Observaciones Clínicas</label>
+                <textarea name="observaciones_clinicas" placeholder="Hallazgos del examen físico"></textarea>
+            </fieldset>
+
+            <fieldset>
+                <legend>Tratamiento y Recomendaciones</legend>
+                <label>Tratamiento</label>
+                <textarea name="tratamiento" placeholder="Prescripciones, medicamentos, recomendaciones terapéuticas"></textarea>
+
+                <label>Recomendaciones</label>
+                <textarea name="recomendaciones" placeholder="Cuidados, seguimiento, próximas citas"></textarea>
+
+                <label>Notas Adicionales</label>
+                <textarea name="notas" placeholder="Observaciones generales"></textarea>
+            </fieldset>
+
+            <button type="submit">Guardar Consulta</button>
+        </form>
+    </section>
+
+    <section class="historial-consultas">
+        <h2>Historial de Consultas</h2>
+        {% if consultas %}
+            <table class="consultas-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Motivo</th>
+                        <th>Zona</th>
+                        <th>Diagnóstico</th>
+                        <th>Severidad</th>
+                        <th>Evolución</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consulta in consultas %}
+                    <tr>
+                        <td>{{ consulta.fecha }}</td>
+                        <td>{{ consulta.motivo }}</td>
+                        <td>{{ consulta.zona_afectada or '-' }}</td>
+                        <td><strong>{{ consulta.diagnostico or '-' }}</strong></td>
+                        <td>{{ consulta.severidad or '-' }}</td>
+                        <td>{{ consulta.evolucion or '-' }}</td>
+                        <td><a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar</a></td>
+                    </tr>
+                    <tr class="consulta-detalle-row">
+                        <td colspan="7">
+                            <details>
+                                <summary>Ver detalles</summary>
+                                <div class="consulta-detalle">
+                                    <p><strong>Tipo de Lesión:</strong> {{ consulta.tipo_lesion or '-' }}</p>
+                                    <p><strong>Duración:</strong> {{ consulta.duracion or '-' }}</p>
+                                    <p><strong>Observaciones:</strong> {{ consulta.observaciones_clinicas or 'No hay' }}</p>
+                                    <p><strong>Tratamiento:</strong> {{ consulta.tratamiento or 'No hay' }}</p>
+                                    <p><strong>Recomendaciones:</strong> {{ consulta.recomendaciones or 'No hay' }}</p>
+                                    <p><strong>Notas:</strong> {{ consulta.notas or 'No hay' }}</p>
+                                </div>
+                            </details>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay consultas registradas para este paciente.</p>
+        {% endif %}
+    </section>
+{% endblock %}
