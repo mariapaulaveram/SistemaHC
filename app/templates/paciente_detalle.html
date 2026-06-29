@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-    <a href="/pacientes">← Volver a Pacientes</a>
+    <div class="detalle-header">
+        <a href="/pacientes">← Volver a Pacientes</a>
+        <div class="detalle-actions">
+            <a href="/pacientes/{{ paciente.id }}/editar" class="btn-editar">Editar paciente</a>
+        </div>
+    </div>
     <h1>Ficha Clínica: {{ paciente.nombre }}</h1>
 
     <section class="datos-personales">

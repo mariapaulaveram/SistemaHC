@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/forms.css') }}">
+{% endblock %}
+{% block content %}
+    <a href="/pacientes/{{ paciente.id }}">← Volver a la ficha</a>
+    <h1>Editar Paciente</h1>
+
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/pacientes/{{ paciente.id }}/editar">
+        <fieldset>
+            <legend>Datos Personales</legend>
+            <input type="text" name="nombre" value="{{ paciente.nombre }}" placeholder="Nombre Completo" required>
+            <input type="text" name="dni" value="{{ paciente.dni }}" placeholder="DNI" required>
+            <input type="date" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento }}">
+            <input type="text" name="telefono" value="{{ paciente.telefono }}" placeholder="Teléfono">
+        </fieldset>
+
+        <fieldset>
+            <legend>Datos Dermatológicos</legend>
+            <select name="tipo_piel">
+                <option value="">Seleccionar tipo de piel...</option>
+                <option value="clara" {% if paciente.tipo_piel == 'clara' %}selected{% endif %}>Piel Clara</option>
+                <option value="media" {% if paciente.tipo_piel == 'media' %}selected{% endif %}>Piel Media</option>
+                <option value="oscura" {% if paciente.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
+                <option value="muy_oscura" {% if paciente.tipo_piel == 'muy_oscura' %}selected{% endif %}>Piel Muy Oscura</option>
+            </select>
+            <textarea name="alergias" placeholder="Alergias conocidas">{{ paciente.alergias }}</textarea>
+            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales">{{ paciente.medicaciones_actuales }}</textarea>
+        </fieldset>
+
+        <fieldset>
+            <legend>Antecedentes</legend>
+            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes">{{ paciente.antecedentes }}</textarea>
+        </fieldset>
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+{% endblock %}

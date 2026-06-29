@@ -5,8 +5,11 @@
     <ul class="pacientes-lista">
         {% for p in pacientes %}
         <li>
-            <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
-            <span>{{ p.dni }}</span>
+            <div>
+                <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
+                <span>{{ p.dni }}</span>
+            </div>
+            <a href="/pacientes/{{ p.id }}/editar" class="btn-editar">Editar</a>
         </li>
         {% else %}
         <li>No hay pacientes registrados.</li>

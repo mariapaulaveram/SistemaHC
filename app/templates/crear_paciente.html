@@ -4,31 +4,34 @@
 {% endblock %}
 {% block content %}
     <h1>Registrar Nuevo Paciente</h1>
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
     <form method="post" action="/pacientes/">
         <fieldset>
             <legend>Datos Personales</legend>
-            <input type="text" name="nombre" placeholder="Nombre Completo" required>
-            <input type="text" name="dni" placeholder="DNI" required>
-            <input type="date" name="fecha_nacimiento">
-            <input type="text" name="telefono" placeholder="Teléfono">
+            <input type="text" name="nombre" placeholder="Nombre Completo" value="{{ form_data.nombre | default('') }}" required>
+            <input type="text" name="dni" placeholder="DNI" value="{{ form_data.dni | default('') }}" required>
+            <input type="date" name="fecha_nacimiento" value="{{ form_data.fecha_nacimiento | default('') }}">
+            <input type="text" name="telefono" placeholder="Teléfono" value="{{ form_data.telefono | default('') }}">
         </fieldset>
 
         <fieldset>
             <legend>Datos Dermatológicos</legend>
             <select name="tipo_piel">
                 <option value="">Seleccionar tipo de piel...</option>
-                <option value="clara">Piel Clara</option>
-                <option value="media">Piel Media</option>
-                <option value="oscura">Piel Oscura</option>
-                <option value="muy_oscura">Piel Muy Oscura</option>
+                <option value="clara" {% if form_data.tipo_piel == 'clara' %}selected{% endif %}>Piel Clara</option>
+                <option value="media" {% if form_data.tipo_piel == 'media' %}selected{% endif %}>Piel Media</option>
+                <option value="oscura" {% if form_data.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
+                <option value="muy_oscura" {% if form_data.tipo_piel == 'muy_oscura' %}selected{% endif %}>Piel Muy Oscura</option>
             </select>
-            <textarea name="alergias" placeholder="Alergias conocidas"></textarea>
-            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales"></textarea>
+            <textarea name="alergias" placeholder="Alergias conocidas">{{ form_data.alergias | default('') }}</textarea>
+            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales">{{ form_data.medicaciones_actuales | default('') }}</textarea>
         </fieldset>
 
         <fieldset>
             <legend>Antecedentes</legend>
-            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes"></textarea>
+            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes">{{ form_data.antecedentes | default('') }}</textarea>
         </fieldset>
 
         <button type="submit">Guardar Paciente</button>
