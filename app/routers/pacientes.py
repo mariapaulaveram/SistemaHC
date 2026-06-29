@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
 from fastapi.responses import RedirectResponse
@@ -10,6 +11,7 @@ from .. import models, schemas, database
 from ..utils import render_template, set_flash_message
 import os
 
+logger = logging.getLogger(__name__)
 
 def parse_bool_query(value: str | None) -> bool | None:
     if value is None:
@@ -25,6 +27,7 @@ router = APIRouter(prefix="/pacientes", tags=["pacientes"])
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "..", "templates"))
 
 @router.get("/")
+@router.get("")  # Ambas rutas /pacientes y /pacientes/
 def pagina_pacientes(
     request: Request,
     q: str | None = Query(None, title="Buscar"),
@@ -38,16 +41,18 @@ def pagina_pacientes(
 
     if q:
         q = q.strip()
+        logger.info(f"BUSQUEDA: q={repr(q)}")
+        
         # Si el usuario buscó por DNI exacto, redirigir a la ficha del paciente
-        # Esto permite desde el buscador (hero o lista) abrir directamente el paciente
-        try:
-            paciente_exacto = db.query(models.Paciente).filter(models.Paciente.dni == q).first()
-            if paciente_exacto:
-                response = RedirectResponse(url=f"/pacientes/{paciente_exacto.id}", status_code=303)
-                return response
-        except Exception:
-            # Fallar silenciosamente y continuar con la búsqueda general
-            pass
+        paciente_exacto = db.query(models.Paciente).filter(models.Paciente.dni == q).first()
+        logger.info(f"  Búsqueda exacta por DNI: paciente_exacto={paciente_exacto}")
+        
+        if paciente_exacto:
+            logger.info(f"  REDIRECT a /pacientes/{paciente_exacto.id}")
+            response = RedirectResponse(url=f"/pacientes/{paciente_exacto.id}", status_code=303)
+            return response
+        
+        logger.info(f"  No hay coincidencia exacta, haciendo búsqueda parcial...")
         q_pattern = f"%{q}%"
         query = query.filter(
             or_(
@@ -55,6 +60,7 @@ def pagina_pacientes(
                 models.Paciente.dni.ilike(q_pattern),
             )
         )
+
 
     if tipo_piel:
         query = query.filter(models.Paciente.tipo_piel == tipo_piel)

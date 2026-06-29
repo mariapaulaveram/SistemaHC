@@ -10,7 +10,7 @@ import os
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)  # No redirigir automáticamente /pacientes a /pacientes/
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 app.mount(
