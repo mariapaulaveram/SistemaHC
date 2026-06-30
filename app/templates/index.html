@@ -1,54 +1,105 @@
 {% extends "base.html" %}
 {% block content %}
-    <section class="hero-section">
-        <div class="hero-copy">
-            <p class="eyebrow">Software Clínico Dermatológico</p>
-            <h1>Historias clínicas electrónicas para consultas dermatológicas modernas</h1>
-            <p>Gestiona tus pacientes, consultas y antecedentes con una interfaz clara, rápida y diseñada para profesionales de la salud.</p>
-            <div class="hero-actions">
-                <a href="/pacientes" class="btn-editar">Ir a pacientes</a>
-                <a href="/pacientes/nuevo" class="btn-secondary">Registrar paciente</a>
-            </div>
-            <form class="hero-search" method="get" action="/pacientes">
-                <input type="search" name="q" placeholder="Buscar paciente por nombre o DNI" aria-label="Buscar paciente">
-                <button type="submit" class="btn-editar">Buscar</button>
-            </form>
-        </div>
-        <div class="hero-visual">
-            <div class="hero-card">
-                <p class="eyebrow">Gestión inteligente</p>
-                <h2>{{ total_pacientes }} pacientes y {{ total_consultas }} consultas registradas</h2>
-                <p>Accede rápidamente a tu historial clínico, filtra por tipo de piel y mantén el seguimiento de cada consulta.</p>
-            </div>
-        </div>
-    </section>
 
-    <section class="features-section">
-        <h2>Herramientas para tu práctica</h2>
-        <div class="feature-grid">
-            <article class="feature-card">
-                <h3>Historia clínica centralizada</h3>
-                <p>Un único lugar para ver datos personales, antecedentes y consultas previas de cada paciente.</p>
-            </article>
-            <article class="feature-card">
-                <h3>Consultas rápidas</h3>
-                <p>Registra una nueva consulta en segundos y almacena diagnósticos, tratamientos y recomendaciones.</p>
-            </article>
-            <article class="feature-card">
-                <h3>Filtro inteligente</h3>
-                <p>Busca por nombre o DNI y filtra por tipo de piel o antecedentes clínicos.</p>
-            </article>
-        </div>
-    </section>
+<div class="dash-header">
+    <div>
+        <h1 style="margin-bottom:2px;">Dashboard</h1>
+        <p class="dash-fecha">{{ hoy_str | capitalize }}</p>
+    </div>
+    <a href="/pacientes/nuevo" class="btn-editar">+ Nuevo paciente</a>
+</div>
 
-    <section class="recent-section dashboard-card">
-        <div class="dashboard-header">
-            <div>
-                <h2>Pacientes recientes</h2>
-                <p class="muted">Revisión rápida de los últimos pacientes agregados</p>
+<div class="dash-stats-bar">
+    <div class="stat-pill">
+        <span class="stat-pill-value">{{ total_pacientes }}</span>
+        <span class="stat-pill-label">Pacientes</span>
+    </div>
+    <div class="stat-pill-div"></div>
+    <div class="stat-pill">
+        <span class="stat-pill-value">{{ consultas_este_mes }}</span>
+        <span class="stat-pill-label">Consultas este mes</span>
+    </div>
+    {% if controles_vencidos %}
+    <div class="stat-pill-div"></div>
+    <div class="stat-pill stat-pill--alert">
+        <span class="stat-pill-value">{{ controles_vencidos | length }}</span>
+        <span class="stat-pill-label">Vencido{{ 's' if controles_vencidos | length != 1 }}</span>
+    </div>
+    {% endif %}
+    {% if controles_proximos %}
+    <div class="stat-pill-div"></div>
+    <div class="stat-pill stat-pill--warn">
+        <span class="stat-pill-value">{{ controles_proximos | length }}</span>
+        <span class="stat-pill-label">Esta semana</span>
+    </div>
+    {% endif %}
+</div>
+
+<div class="dash-cols">
+
+    {# ── Columna izquierda: alertas ─────────────────────── #}
+    <div class="dash-col-left">
+
+        {% if controles_vencidos %}
+        <section class="dash-panel">
+            <h2 class="dash-panel-title dash-panel-title--alert">Controles vencidos</h2>
+            <div class="control-list">
+                {% for consulta in controles_vencidos %}
+                <a href="/pacientes/{{ consulta.paciente_id }}" class="control-item control-item--alert">
+                    <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
+                    <div class="control-item-meta">
+                        {% if consulta.motivo %}<span class="control-motivo">{{ consulta.motivo }}</span>{% endif %}
+                        <span class="badge badge-vencido">{{ consulta.proximo_control.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                </a>
+                {% endfor %}
             </div>
-            <a href="/pacientes" class="btn-secondary">Ver todos</a>
-        </div>
-        <div id="lista-pacientes" hx-get="/pacientes/lista" hx-trigger="load"></div>
-    </section>
+        </section>
+        {% endif %}
+
+        {% if controles_proximos %}
+        <section class="dash-panel">
+            <h2 class="dash-panel-title dash-panel-title--warn">Próximos controles</h2>
+            <div class="control-list">
+                {% for consulta in controles_proximos %}
+                <a href="/pacientes/{{ consulta.paciente_id }}" class="control-item control-item--warn">
+                    <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
+                    <div class="control-item-meta">
+                        {% if consulta.motivo %}<span class="control-motivo">{{ consulta.motivo }}</span>{% endif %}
+                        <span class="badge badge-proximo">{{ consulta.proximo_control.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if not controles_vencidos and not controles_proximos %}
+        <section class="dash-panel dash-panel--ok">
+            <p>Sin controles pendientes esta semana.</p>
+        </section>
+        {% endif %}
+
+    </div>
+
+    {# ── Columna derecha: últimos pacientes ─────────────── #}
+    <div class="dash-col-right">
+        <section class="dash-panel">
+            <div class="dash-panel-header">
+                <h2>Últimos pacientes</h2>
+                <a href="/pacientes" class="dash-ver-todos">Ver todos →</a>
+            </div>
+            <div id="lista-pacientes" hx-get="/pacientes/lista?limit=5&recent=true" hx-trigger="load"></div>
+        </section>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer">
+    <span>HC-System · Historia Clínica Dermatológica</span>
+    <span>© {{ hoy.year }}</span>
+</footer>
 {% endblock %}

@@ -1,38 +1,106 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Registrar Nuevo Paciente</h1>
-    {% set form_data = form_data | default({}) %}
+    {% set fd = form_data | default({}) %}
     {% if error %}
         <div class="error-message">{{ error }}</div>
     {% endif %}
+
     <form method="post" action="/pacientes/">
-        <fieldset>
-            <legend>Datos Personales</legend>
-            <input type="text" name="nombre" placeholder="Nombre Completo" value="{{ form_data.nombre | default('') }}" required>
-            <input type="text" name="dni" placeholder="DNI" value="{{ form_data.dni | default('') }}" required>
-            <input type="date" name="fecha_nacimiento" value="{{ form_data.fecha_nacimiento | default('') }}">
-            <input type="text" name="telefono" placeholder="Teléfono" value="{{ form_data.telefono | default('') }}">
-        </fieldset>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-        <fieldset>
-            <legend>Datos Dermatológicos</legend>
-            <select name="tipo_piel">
-                <option value="">Seleccionar tipo de piel...</option>
-                <option value="clara" {% if form_data.tipo_piel == 'clara' %}selected{% endif %}>Piel Clara</option>
-                <option value="media" {% if form_data.tipo_piel == 'media' %}selected{% endif %}>Piel Media</option>
-                <option value="oscura" {% if form_data.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
-                <option value="muy_oscura" {% if form_data.tipo_piel == 'muy_oscura' %}selected{% endif %}>Piel Muy Oscura</option>
-            </select>
-            <textarea name="alergias" placeholder="Alergias conocidas">{{ form_data.alergias | default('') }}</textarea>
-            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales">{{ form_data.medicaciones_actuales | default('') }}</textarea>
-        </fieldset>
+        {# 1. Datos personales #}
+        <div class="form-seccion">
+            <p class="form-seccion-titulo">1 · Datos personales</p>
+            <div class="form-seccion-body">
+                <div class="form-grid">
+                    <div class="form-field form-grid-full">
+                        <label>Nombre completo *</label>
+                        <input type="text" name="nombre" value="{{ fd.nombre | default('') }}"
+                               placeholder="Apellido, Nombre" required>
+                    </div>
+                    <div class="form-field">
+                        <label>DNI *</label>
+                        <input type="text" name="dni" value="{{ fd.dni | default('') }}"
+                               placeholder="Ej: 12345678" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Fecha de nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" value="{{ fd.fecha_nacimiento | default('') }}">
+                    </div>
+                    <div class="form-field">
+                        <label>Sexo</label>
+                        <select name="sexo">
+                            <option value="">Seleccionar...</option>
+                            <option value="femenino" {% if fd.sexo == 'femenino' %}selected{% endif %}>Femenino</option>
+                            <option value="masculino" {% if fd.sexo == 'masculino' %}selected{% endif %}>Masculino</option>
+                            <option value="otro" {% if fd.sexo == 'otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>Teléfono</label>
+                        <input type="text" name="telefono" value="{{ fd.telefono | default('') }}"
+                               placeholder="Ej: +54 9 11 1234-5678">
+                    </div>
+                    <div class="form-field">
+                        <label>Ocupación</label>
+                        <input type="text" name="ocupacion" value="{{ fd.ocupacion | default('') }}"
+                               placeholder="Ej: docente, albañil, oficinista">
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <fieldset>
-            <legend>Antecedentes</legend>
-            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes">{{ form_data.antecedentes | default('') }}</textarea>
-        </fieldset>
+        {# 2. Datos dermatológicos #}
+        <div class="form-seccion">
+            <p class="form-seccion-titulo">2 · Datos dermatológicos</p>
+            <div class="form-seccion-body">
+                <div class="form-grid">
+                    <div class="form-field form-grid-full">
+                        <label>Fototipo (escala Fitzpatrick)</label>
+                        <select name="tipo_piel">
+                            <option value="">Seleccionar...</option>
+                            {% for val, label in [
+                                ('I',   'I — Muy clara · Siempre se quema, nunca se broncea'),
+                                ('II',  'II — Clara · Casi siempre se quema, broncea poco'),
+                                ('III', 'III — Media · A veces se quema, broncea gradualmente'),
+                                ('IV',  'IV — Olivácea · Rara vez se quema, siempre broncea'),
+                                ('V',   'V — Morena · Muy raramente se quema, broncea intensamente'),
+                                ('VI',  'VI — Oscura · Nunca se quema, bronceado intenso'),
+                            ] %}
+                            <option value="{{ val }}" {% if fd.tipo_piel == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field form-grid-full">
+                        <label>Alergias conocidas</label>
+                        <textarea name="alergias"
+                                  placeholder="Medicamentos, materiales de contacto, alimentos, látex...">{{ fd.alergias | default('') }}</textarea>
+                    </div>
+                    <div class="form-field form-grid-full">
+                        <label>Medicación concomitante</label>
+                        <textarea name="medicaciones_actuales"
+                                  placeholder="Medicamentos actuales: nombre, dosis y frecuencia...">{{ fd.medicaciones_actuales | default('') }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <button type="submit">Guardar Paciente</button>
+        {# 3. Antecedentes #}
+        <div class="form-seccion">
+            <p class="form-seccion-titulo">3 · Antecedentes</p>
+            <div class="form-seccion-body">
+                <div class="form-field">
+                    <label>Antecedentes médicos relevantes</label>
+                    <textarea name="antecedentes"
+                              placeholder="Enfermedades crónicas, cirugías previas, antecedentes dermatológicos familiares, hábitos (tabaco, exposición solar laboral)...">{{ fd.antecedentes | default('') }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-editar">Guardar paciente</button>
+            <a href="/pacientes" class="btn-secondary">Cancelar</a>
+        </div>
     </form>
 {% endblock %}
-

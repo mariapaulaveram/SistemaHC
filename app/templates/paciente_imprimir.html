@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>HC — {{ paciente.nombre }}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 10pt;
+            color: #1a2733;
+            background: white;
+            padding: 20mm 18mm;
+        }
+
+        /* ── Encabezado ── */
+        .hc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #1a5c96;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+        .hc-header h1 {
+            font-size: 15pt;
+            color: #1a5c96;
+            font-weight: 700;
+        }
+        .hc-header .meta {
+            text-align: right;
+            font-size: 8pt;
+            color: #5c6b7a;
+        }
+
+        /* ── Secciones ── */
+        .seccion {
+            margin-bottom: 14px;
+            break-inside: avoid;
+        }
+        .seccion-titulo {
+            font-size: 7.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #1a5c96;
+            border-bottom: 1px solid #dde3e9;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 24px;
+        }
+        .campo { margin-bottom: 4px; }
+        .campo label {
+            font-size: 7.5pt;
+            font-weight: 600;
+            color: #5c6b7a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: block;
+        }
+        .campo span {
+            font-size: 9.5pt;
+            color: #1a2733;
+        }
+
+        /* ── Consultas ── */
+        .consulta-card {
+            border: 1px solid #dde3e9;
+            border-left: 3px solid #1a5c96;
+            border-radius: 4px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            break-inside: avoid;
+        }
+        .consulta-fecha {
+            font-weight: 700;
+            font-size: 10pt;
+            color: #123f69;
+        }
+        .consulta-motivo {
+            font-size: 9pt;
+            color: #5c6b7a;
+            margin-bottom: 8px;
+        }
+        .consulta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 24px;
+            margin-bottom: 8px;
+        }
+        .consulta-campo label {
+            font-size: 7pt;
+            font-weight: 600;
+            color: #5c6b7a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: block;
+        }
+        .consulta-campo span {
+            font-size: 9pt;
+        }
+        .full { grid-column: 1 / -1; }
+        .badge {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 99px;
+            font-size: 7.5pt;
+            font-weight: 600;
+        }
+        .badge-vencido { background: #fbeae8; color: #a4332a; }
+        .badge-proximo { background: #fff8e1; color: #8a6200; }
+        .badge-ok      { background: #e6f4ea; color: #1e6b3a; }
+
+        /* ── Fotos ── */
+        .fotos-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .foto-print {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid #dde3e9;
+            border-radius: 3px;
+        }
+
+        /* ── Footer ── */
+        .hc-footer {
+            margin-top: 20px;
+            border-top: 1px solid #dde3e9;
+            padding-top: 8px;
+            font-size: 7.5pt;
+            color: #5c6b7a;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ── Print ── */
+        @media print {
+            body { padding: 12mm 16mm; }
+            .no-print { display: none !important; }
+            a { color: inherit; text-decoration: none; }
+        }
+
+        /* ── Botón imprimir (solo pantalla) ── */
+        @media screen {
+            .print-bar {
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                background: #1a5c96;
+                color: white;
+                padding: 10px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-family: inherit;
+                font-size: 0.9rem;
+                z-index: 999;
+            }
+            .print-bar button {
+                background: white;
+                color: #1a5c96;
+                border: none;
+                border-radius: 6px;
+                padding: 7px 18px;
+                font-weight: 600;
+                font-size: 0.875rem;
+                cursor: pointer;
+            }
+            .print-bar a {
+                color: rgba(255,255,255,0.8);
+                font-size: 0.85rem;
+            }
+            body { padding-top: 56px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-bar no-print">
+        <a href="/pacientes/{{ paciente.id }}">← Volver a la ficha</a>
+        <span>Historia Clínica — {{ paciente.nombre }}</span>
+        <button onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+    </div>
+
+    <div class="hc-header">
+        <div>
+            <div style="font-size:8pt;color:#5c6b7a;margin-bottom:2px">Historia Clínica Dermatológica</div>
+            <h1>{{ paciente.nombre }}</h1>
+        </div>
+        <div class="meta">
+            <div>Impreso el {{ fecha_hoy }}</div>
+            <div>Total de consultas: {{ consultas | length }}</div>
+        </div>
+    </div>
+
+    {# ── Datos del paciente ── #}
+    <div class="seccion">
+        <div class="seccion-titulo">Datos del paciente</div>
+        <div class="grid-2">
+            <div class="campo"><label>DNI</label><span>{{ paciente.dni }}</span></div>
+            <div class="campo">
+                <label>Fecha de nacimiento</label>
+                <span>
+                    {{ paciente.fecha_nacimiento or '—' }}
+                    {% if paciente.fecha_nacimiento %}
+                        ({{ paciente.fecha_nacimiento | calcular_edad }} años)
+                    {% endif %}
+                </span>
+            </div>
+            {% if paciente.sexo %}
+            <div class="campo"><label>Sexo</label><span>{{ paciente.sexo | capitalize }}</span></div>
+            {% endif %}
+            {% if paciente.ocupacion %}
+            <div class="campo"><label>Ocupación</label><span>{{ paciente.ocupacion }}</span></div>
+            {% endif %}
+            {% if paciente.telefono %}
+            <div class="campo"><label>Teléfono</label><span>{{ paciente.telefono }}</span></div>
+            {% endif %}
+            {% if paciente.tipo_piel %}
+            <div class="campo"><label>Fototipo (Fitzpatrick)</label><span>Tipo {{ paciente.tipo_piel }}</span></div>
+            {% endif %}
+        </div>
+        {% if paciente.alergias %}
+        <div class="campo" style="margin-top:6px"><label>Alergias</label><span>{{ paciente.alergias }}</span></div>
+        {% endif %}
+        {% if paciente.medicaciones_actuales %}
+        <div class="campo" style="margin-top:4px"><label>Medicación concomitante</label><span>{{ paciente.medicaciones_actuales }}</span></div>
+        {% endif %}
+        {% if paciente.antecedentes %}
+        <div class="campo" style="margin-top:4px"><label>Antecedentes</label><span>{{ paciente.antecedentes }}</span></div>
+        {% endif %}
+    </div>
+
+    {# ── Consultas ── #}
+    <div class="seccion-titulo">Historial de consultas ({{ consultas | length }})</div>
+
+    {% for consulta in consultas %}
+    <div class="consulta-card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+            <span class="consulta-fecha">{{ consulta.fecha }}</span>
+            {% if consulta.proximo_control %}
+                {% set estado = consulta.proximo_control | estado_control %}
+                <span class="badge badge-{{ estado }}">Control: {{ consulta.proximo_control }}</span>
+            {% endif %}
+        </div>
+        <div class="consulta-motivo">{{ consulta.motivo }}</div>
+
+        <div class="consulta-grid">
+            {% if consulta.duracion %}
+            <div class="consulta-campo"><label>Evolución</label><span>{{ consulta.duracion }}</span></div>
+            {% endif %}
+            {% if consulta.zona_afectada %}
+            <div class="consulta-campo"><label>Zona afectada</label><span>{{ consulta.zona_afectada }}</span></div>
+            {% endif %}
+            {% if consulta.sintomas %}
+            <div class="consulta-campo"><label>Síntomas</label><span>{{ consulta.sintomas }}</span></div>
+            {% endif %}
+            {% if consulta.factores_desencadenantes %}
+            <div class="consulta-campo"><label>Factores desencadenantes</label><span>{{ consulta.factores_desencadenantes }}</span></div>
+            {% endif %}
+            {% if consulta.tipo_lesion %}
+            <div class="consulta-campo"><label>Lesión primaria</label><span>{{ consulta.tipo_lesion }}</span></div>
+            {% endif %}
+            {% if consulta.lesion_secundaria %}
+            <div class="consulta-campo"><label>Lesión secundaria</label><span>{{ consulta.lesion_secundaria }}</span></div>
+            {% endif %}
+            {% if consulta.severidad %}
+            <div class="consulta-campo"><label>Severidad</label><span>{{ consulta.severidad }}</span></div>
+            {% endif %}
+            {% if consulta.evolucion %}
+            <div class="consulta-campo"><label>Curso</label><span>{{ consulta.evolucion }}</span></div>
+            {% endif %}
+            {% if consulta.observaciones_clinicas %}
+            <div class="consulta-campo full"><label>Observaciones</label><span>{{ consulta.observaciones_clinicas }}</span></div>
+            {% endif %}
+            {% if consulta.diagnostico %}
+            <div class="consulta-campo"><label>Diagnóstico</label><span><strong>{{ consulta.diagnostico }}</strong></span></div>
+            {% endif %}
+            {% if consulta.diagnostico_diferencial %}
+            <div class="consulta-campo"><label>Diagnóstico diferencial</label><span>{{ consulta.diagnostico_diferencial }}</span></div>
+            {% endif %}
+            {% if consulta.estudios_solicitados %}
+            <div class="consulta-campo full"><label>Estudios solicitados</label><span>{{ consulta.estudios_solicitados }}</span></div>
+            {% endif %}
+            {% if consulta.procedimientos %}
+            <div class="consulta-campo full"><label>Procedimientos</label><span>{{ consulta.procedimientos }}</span></div>
+            {% endif %}
+            {% if consulta.tratamiento %}
+            <div class="consulta-campo full"><label>Tratamiento</label><span>{{ consulta.tratamiento }}</span></div>
+            {% endif %}
+            {% if consulta.recomendaciones %}
+            <div class="consulta-campo full"><label>Recomendaciones</label><span>{{ consulta.recomendaciones }}</span></div>
+            {% endif %}
+            {% if consulta.tratamientos_previos %}
+            <div class="consulta-campo full"><label>Tratamientos previos</label><span>{{ consulta.tratamientos_previos }}</span></div>
+            {% endif %}
+        </div>
+
+        {% if consulta.imagenes %}
+        <div><label style="font-size:7pt;font-weight:600;color:#5c6b7a;text-transform:uppercase;letter-spacing:.04em">Fotos ({{ consulta.imagenes | length }})</label>
+            <div class="fotos-grid">
+                {% for img in consulta.imagenes %}
+                <img class="foto-print" src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or '' }}">
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <p style="color:#5c6b7a;font-size:9pt">No hay consultas registradas.</p>
+    {% endfor %}
+
+    <div class="hc-footer">
+        <span>HC-System · Historia Clínica Dermatológica</span>
+        <span>{{ paciente.nombre }} · DNI {{ paciente.dni }}</span>
+    </div>
+
+</body>
+</html>

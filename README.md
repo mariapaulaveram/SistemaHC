@@ -177,3 +177,12 @@ Etapas 0, 1 y 2 completas y auditadas. Lo que sigue:
 - **Etapa 5** — Deploy a un hosting real con Postgres administrado (Railway,
   Render, Supabase o Neon), para que sea accesible desde cualquier lugar
   con internet, no solo en `localhost`.
+
+  tambien faltaria Ficha clínica con seguimiento fotográfico de lesiones
+En dermatología, la imagen vale más que mil palabras. Medilink te permite adjuntar fotografías clínicas directamente en la ficha del paciente para comparar la evolución de una lesión consulta a consulta.
+
+Registra diagnósticos CIE-10, tratamientos tópicos, sistémicos y procedimientos realizados, todo organizado por fecha y área corporal.
+
+Registro fotográfico de lesiones por zona corporal
+Historial de tratamientos tópicos y sistémicos
+Ficha personalizable con diagnósticos dermatológicos

@@ -1,62 +1,115 @@
 {% extends "base.html" %}
 {% block content %}
-    {% set search_params = search_params | default({}) %}
-    <h1>Pacientes</h1>
-    <a class="button" href="/pacientes/nuevo">Nuevo Paciente</a>
+{% set search_params = search_params | default({}) %}
 
-    <form method="get" action="/pacientes" class="busqueda-filtros">
-        <div>
-            <label for="q">Buscar</label>
-            <input type="search" id="q" name="q" placeholder="Nombre o DNI" value="{{ search_params.q | default('') }}">
-        </div>
-        <div>
-            <label for="tipo_piel">Tipo de piel</label>
-            <select id="tipo_piel" name="tipo_piel">
-                <option value="">Todos</option>
-                <option value="clara" {% if search_params.tipo_piel == 'clara' %}selected{% endif %}>Piel Clara</option>
-                <option value="media" {% if search_params.tipo_piel == 'media' %}selected{% endif %}>Piel Media</option>
-                <option value="oscura" {% if search_params.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
-                <option value="muy_oscura" {% if search_params.tipo_piel == 'muy_oscura' %}selected{% endif %}>Muy oscura</option>
-            </select>
-        </div>
-        <div>
-            <label for="con_antecedentes">Antecedentes</label>
-            <select id="con_antecedentes" name="con_antecedentes">
-                <option value="">Todos</option>
-                <option value="1" {% if search_params.con_antecedentes == '1' %}selected{% endif %}>Con antecedentes</option>
-                <option value="0" {% if search_params.con_antecedentes == '0' %}selected{% endif %}>Sin antecedentes</option>
-            </select>
-        </div>
-        <div>
-            <label for="sort">Ordenar</label>
-            <select id="sort" name="sort">
-                <option value="nombre" {% if search_params.sort == 'nombre' %}selected{% endif %}>Nombre</option>
-                <option value="dni" {% if search_params.sort == 'dni' %}selected{% endif %}>DNI</option>
-                <option value="fecha_nacimiento" {% if search_params.sort == 'fecha_nacimiento' %}selected{% endif %}>Nacimiento</option>
-            </select>
-        </div>
-        <div>
-            <label for="order">Dirección</label>
-            <select id="order" name="order">
-                <option value="asc" {% if search_params.order == 'asc' %}selected{% endif %}>Ascendente</option>
-                <option value="desc" {% if search_params.order == 'desc' %}selected{% endif %}>Descendente</option>
-            </select>
-        </div>
-        <button type="submit">Aplicar</button>
-    </form>
+{# ── Encabezado ── #}
+<div class="pl-header">
+    <div class="pl-header-left">
+        <h1>Pacientes</h1>
+        {% if pacientes %}
+        <span class="pl-count">{{ pacientes | length }} registro{{ 's' if pacientes | length != 1 }}</span>
+        {% endif %}
+    </div>
+    <a class="btn-editar" href="/pacientes/nuevo">+ Nuevo paciente</a>
+</div>
 
-    <ul class="pacientes-lista">
-        {% for p in pacientes %}
-        <li>
-            <div>
-                <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
-                <span>{{ p.dni }}</span>
-            </div>
-            <a href="/pacientes/{{ p.id }}/editar" class="btn-editar">Editar</a>
-        </li>
-        {% else %}
-        <li>No hay pacientes registrados.</li>
-        {% endfor %}
-    </ul>
+{# ── Buscador + ordenamiento ── #}
+<form method="get" action="/pacientes" class="pl-search-bar">
+    <div class="pl-search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" class="pl-search-icon">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+            type="search"
+            name="q"
+            placeholder="Nombre, DNI, diagnóstico…"
+            value="{{ search_params.q | default('') }}"
+            autofocus
+            class="pl-search-input"
+        >
+        {% if search_params.q %}
+        <a href="/pacientes" class="pl-search-clear" title="Limpiar">✕</a>
+        {% endif %}
+    </div>
+    <div class="pl-sort-wrap">
+        <select name="sort" class="pl-sort-select">
+            <option value="nombre" {% if search_params.sort == 'nombre' %}selected{% endif %}>Nombre</option>
+            <option value="dni" {% if search_params.sort == 'dni' %}selected{% endif %}>DNI</option>
+            <option value="fecha_nacimiento" {% if search_params.sort == 'fecha_nacimiento' %}selected{% endif %}>Nacimiento</option>
+        </select>
+        <select name="order" class="pl-sort-select">
+            <option value="asc" {% if search_params.order == 'asc' %}selected{% endif %}>↑ Asc</option>
+            <option value="desc" {% if search_params.order == 'desc' %}selected{% endif %}>↓ Desc</option>
+        </select>
+        <button type="submit" class="pl-search-btn">Buscar</button>
+    </div>
+</form>
+
+{# ── Tabla de pacientes ── #}
+{% if pacientes %}
+<div class="pl-table-wrap">
+    <table class="pl-table">
+        <thead>
+            <tr>
+                <th>Paciente</th>
+                <th>DNI</th>
+                <th>Edad</th>
+                <th>Sexo</th>
+                <th>Fototipo</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pacientes %}
+            <tr class="pl-row" onclick="window.location='/pacientes/{{ p.id }}'">
+                <td class="pl-cell-nombre">
+                    <div class="pl-avatar">{{ p.nombre[0] | upper }}</div>
+                    <div>
+                        <a href="/pacientes/{{ p.id }}" class="pl-nombre-link"
+                           onclick="event.stopPropagation()">{{ p.nombre }}</a>
+                        {% if p.telefono %}
+                        <div class="pl-sub">{{ p.telefono }}</div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="pl-cell-muted">{{ p.dni or '—' }}</td>
+                <td class="pl-cell-muted">
+                    {% if p.fecha_nacimiento %}
+                        {{ p.fecha_nacimiento | calcular_edad }} a
+                    {% else %}—{% endif %}
+                </td>
+                <td class="pl-cell-muted">
+                    {% if p.sexo %}
+                        {{ p.sexo | capitalize }}
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if p.tipo_piel %}
+                    <span class="pl-fototipo-badge">{{ p.tipo_piel }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td class="pl-cell-actions" onclick="event.stopPropagation()">
+                    <a href="/pacientes/{{ p.id }}" class="pl-btn-ver">Ver</a>
+                    <a href="/pacientes/{{ p.id }}/editar" class="pl-btn-edit">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="pl-empty">
+    {% if search_params.q %}
+        <p>Sin resultados para <strong>{{ search_params.q }}</strong>.</p>
+        <a href="/pacientes">Limpiar búsqueda</a>
+    {% else %}
+        <p>No hay pacientes registrados.</p>
+        <a href="/pacientes/nuevo" class="btn-editar">Registrar primer paciente</a>
+    {% endif %}
+</div>
+{% endif %}
+
 {% endblock %}
-

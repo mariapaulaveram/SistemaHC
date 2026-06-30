@@ -9,11 +9,23 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">🩺 HC-System</div>
-        <ul>
+        <a href="/" class="nav-logo">🩺 HC-System</a>
+
+        <ul class="nav-links">
             <li><a href="/">Dashboard</a></li>
-            <li><a href="/pacientes/nuevo">Nuevo Paciente</a></li>
+            <li><a href="/pacientes">Pacientes</a></li>
+            <li><a href="/pacientes/nuevo">Nuevo paciente</a></li>
         </ul>
+
+        <form class="nav-search" method="get" action="/pacientes">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" name="q" placeholder="Buscar paciente, DNI, diagnóstico...">
+        </form>
+
+        <form method="post" action="/logout" class="nav-logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-logout">Cerrar sesión</button>
+        </form>
     </nav>
 
     <main class="container">
@@ -26,6 +38,7 @@
         {% endif %}
         {% block content %}{% endblock %}
     </main>
+    {% block footer %}{% endblock %}
 </body>
 </html>
 

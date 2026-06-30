@@ -1,10 +1,42 @@
 import json
+from datetime import date
 from typing import Any
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException
 from fastapi.templating import Jinja2Templates
+from .auth import get_current_user_id, create_csrf_token, verify_csrf_token
 
 FLASH_COOKIE = "flash_messages"
 
+
+# ── Filtros Jinja2 compartidos ────────────────────────────────────────────────
+
+def _calcular_edad(fecha_nacimiento):
+    if not fecha_nacimiento:
+        return None
+    hoy = date.today()
+    return hoy.year - fecha_nacimiento.year - (
+        (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day)
+    )
+
+def _estado_control(proximo_control):
+    if not proximo_control:
+        return None
+    delta = (proximo_control - date.today()).days
+    if delta < 0:
+        return "vencido"
+    if delta <= 7:
+        return "proximo"
+    return "ok"
+
+def make_templates(directory: str) -> Jinja2Templates:
+    """Crea una instancia de Jinja2Templates con todos los filtros registrados."""
+    t = Jinja2Templates(directory=directory)
+    t.env.filters["calcular_edad"] = _calcular_edad
+    t.env.filters["estado_control"] = _estado_control
+    return t
+
+
+# ── Flash messages ────────────────────────────────────────────────────────────
 
 def get_flash_messages(request: Request) -> list[str]:
     raw = request.cookies.get(FLASH_COOKIE)
@@ -19,13 +51,25 @@ def get_flash_messages(request: Request) -> list[str]:
         return []
 
 
-def render_template(templates: Jinja2Templates, request: Request, name: str, context: dict[str, Any] | None = None):
+def render_template(
+    templates: Jinja2Templates,
+    request: Request,
+    name: str,
+    context: dict[str, Any] | None = None,
+):
     context = context or {}
-    if "flash_messages" not in context:
-        context["flash_messages"] = get_flash_messages(request)
+    context.setdefault("flash_messages", get_flash_messages(request))
+    user_id = get_current_user_id(request)
+    context.setdefault("csrf_token", create_csrf_token(user_id) if user_id else "")
     response = templates.TemplateResponse(request=request, name=name, context=context)
     response.delete_cookie(FLASH_COOKIE, path="/")
     return response
+
+
+def check_csrf(token: str | None, request: Request) -> None:
+    user_id = get_current_user_id(request)
+    if not verify_csrf_token(token, user_id):
+        raise HTTPException(status_code=403, detail="Token CSRF inválido.")
 
 
 def set_flash_message(response: Response, message: str):

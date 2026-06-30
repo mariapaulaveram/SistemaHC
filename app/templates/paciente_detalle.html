@@ -4,6 +4,7 @@
     <div class="detalle-header">
         <a href="/pacientes">← Volver a Pacientes</a>
         <div class="detalle-actions">
+            <a href="/pacientes/{{ paciente.id }}/imprimir" class="btn-secondary" target="_blank">🖨 Imprimir HC</a>
             <a href="/pacientes/{{ paciente.id }}/editar" class="btn-editar">Editar paciente</a>
         </div>
     </div>
@@ -15,86 +16,214 @@
     <section class="datos-personales">
         <h2>Datos Personales</h2>
         <p><strong>DNI:</strong> {{ paciente.dni }}</p>
-        <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento or 'No informada' }}</p>
+        <p><strong>Fecha de Nacimiento:</strong>
+            {{ paciente.fecha_nacimiento or 'No informada' }}
+            {% if paciente.fecha_nacimiento %}
+                <span class="badge badge-muted">{{ paciente.fecha_nacimiento | calcular_edad }} años</span>
+            {% endif %}
+        </p>
+        {% if paciente.sexo %}<p><strong>Sexo:</strong> {{ paciente.sexo | capitalize }}</p>{% endif %}
         <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No informado' }}</p>
+        {% if paciente.ocupacion %}<p><strong>Ocupación:</strong> {{ paciente.ocupacion }}</p>{% endif %}
     </section>
 
     <section class="datos-dermatologicos">
         <h2>Datos Dermatológicos</h2>
-        <p><strong>Tipo de Piel:</strong> {{ paciente.tipo_piel or 'No informado' }}</p>
+        <p><strong>Fototipo:</strong> {{ ('Fitzpatrick ' + paciente.tipo_piel) if paciente.tipo_piel else 'No informado' }}</p>
         <p><strong>Alergias:</strong> {{ paciente.alergias or 'No reportadas' }}</p>
-        <p><strong>Medicaciones Actuales:</strong> {{ paciente.medicaciones_actuales or 'Ninguna reportada' }}</p>
+        <p><strong>Medicación concomitante:</strong> {{ paciente.medicaciones_actuales or 'Ninguna reportada' }}</p>
         <p><strong>Antecedentes:</strong> {{ paciente.antecedentes or 'No reportados' }}</p>
     </section>
 
     <section class="consulta-form">
-        <h2>Agregar Consulta</h2>
-        <form method="post" action="/consultas/pacientes/{{ paciente.id }}">
-            <fieldset>
-                <legend>Datos de la Consulta</legend>
-                <label>Fecha *</label>
-                <input type="date" name="fecha" value="{{ form_data.fecha | default('') }}" required>
+        <h2>Nueva Consulta</h2>
+        {% set fd = form_data | default({}) %}
+        <form method="post" action="/consultas/pacientes/{{ paciente.id }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-                <label>Motivo de Consulta *</label>
-                <input type="text" name="motivo" value="{{ form_data.motivo | default('') }}" placeholder="Ej: lesión en brazo, picazón en cara" required>
+            {# 1. Datos de la consulta #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">1 · Datos de la consulta</p>
+                <div class="form-seccion-body">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Fecha *</label>
+                            <input type="date" name="fecha" value="{{ fd.fecha | default('') }}" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Próximo control</label>
+                            <input type="date" name="proximo_control" value="{{ fd.proximo_control | default('') }}">
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Motivo de consulta *</label>
+                            <input type="text" name="motivo" value="{{ fd.motivo | default('') }}"
+                                   placeholder="Ej: lesión en brazo derecho, picazón persistente en cara" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <label>Diagnóstico</label>
-                <input type="text" name="diagnostico" value="{{ form_data.diagnostico | default('') }}" placeholder="Ej: dermatitis, eczema, psoriasis">
-            </fieldset>
+            {# 2. Anamnesis #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">2 · Anamnesis</p>
+                <div class="form-seccion-body">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Tiempo de evolución</label>
+                            <input type="text" name="duracion" value="{{ fd.duracion | default('') }}"
+                                   placeholder="Ej: 3 días, 2 semanas, 1 mes">
+                        </div>
+                        <div class="form-field">
+                            <label>Zona afectada</label>
+                            <input type="text" name="zona_afectada" value="{{ fd.zona_afectada | default('') }}"
+                                   placeholder="Ej: cara, brazos, tronco, piernas">
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Síntomas acompañantes</label>
+                            <input type="text" name="sintomas" value="{{ fd.sintomas | default('') }}"
+                                   placeholder="Ej: prurito intenso, ardor, dolor, sangrado">
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Factores desencadenantes / agravantes</label>
+                            <input type="text" name="factores_desencadenantes" value="{{ fd.factores_desencadenantes | default('') }}"
+                                   placeholder="Ej: exposición solar, estrés, contacto con detergente, alimentos">
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Tratamientos previos</label>
+                            <textarea name="tratamientos_previos"
+                                      placeholder="Qué utilizó antes de esta consulta y con qué resultado...">{{ fd.tratamientos_previos | default('') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <fieldset>
-                <legend>Descripción Clínica</legend>
-                <label>Zona Afectada</label>
-                <input type="text" name="zona_afectada" value="{{ form_data.zona_afectada | default('') }}" placeholder="Ej: cara, brazos, pecho, piernas">
+            {# 3. Examen dermatológico #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">3 · Examen dermatológico</p>
+                <div class="form-seccion-body">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Lesión primaria</label>
+                            <select name="tipo_lesion">
+                                <option value="">Seleccionar...</option>
+                                {% for val, label in [('papula','Pápula'),('placa','Placa'),('vesicula','Vesícula'),('pustula','Pústula'),('macula','Mácula'),('nodulo','Nódulo'),('urtica','Urtica / Habón'),('ampolla','Ampolla'),('tumor','Tumor'),('otra','Otra')] %}
+                                <option value="{{ val }}" {% if fd.tipo_lesion == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Lesión secundaria</label>
+                            <select name="lesion_secundaria">
+                                <option value="">Seleccionar...</option>
+                                {% for val, label in [('escama','Escama'),('costra','Costra'),('erosion','Erosión'),('ulcera','Úlcera'),('fisura','Fisura'),('liquenificacion','Liquenificación'),('atrofia','Atrofia'),('cicatriz','Cicatriz'),('otra','Otra')] %}
+                                <option value="{{ val }}" {% if fd.lesion_secundaria == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Severidad</label>
+                            <select name="severidad">
+                                <option value="">Seleccionar...</option>
+                                <option value="leve" {% if fd.severidad == 'leve' %}selected{% endif %}>Leve</option>
+                                <option value="moderada" {% if fd.severidad == 'moderada' %}selected{% endif %}>Moderada</option>
+                                <option value="severa" {% if fd.severidad == 'severa' %}selected{% endif %}>Severa</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Evolución</label>
+                            <select name="evolucion">
+                                <option value="">Seleccionar...</option>
+                                <option value="inicio" {% if fd.evolucion == 'inicio' %}selected{% endif %}>Primera consulta</option>
+                                <option value="mejorando" {% if fd.evolucion == 'mejorando' %}selected{% endif %}>Mejorando</option>
+                                <option value="estable" {% if fd.evolucion == 'estable' %}selected{% endif %}>Estable</option>
+                                <option value="empeorando" {% if fd.evolucion == 'empeorando' %}selected{% endif %}>Empeorando</option>
+                            </select>
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Observaciones del examen físico</label>
+                            <textarea name="observaciones_clinicas"
+                                      placeholder="Descripción de las lesiones: número, forma, color, superficie, bordes, distribución, mucosas, uñas, cabello...">{{ fd.observaciones_clinicas | default('') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <label>Tipo de Lesión</label>
-                <select name="tipo_lesion">
-                    <option value="">Seleccionar...</option>
-                    <option value="papula" {% if form_data.tipo_lesion == 'papula' %}selected{% endif %}>Pápula</option>
-                    <option value="placa" {% if form_data.tipo_lesion == 'placa' %}selected{% endif %}>Placa</option>
-                    <option value="vesícula" {% if form_data.tipo_lesion == 'vesícula' %}selected{% endif %}>Vesícula</option>
-                    <option value="pústula" {% if form_data.tipo_lesion == 'pústula' %}selected{% endif %}>Pústula</option>
-                    <option value="mácula" {% if form_data.tipo_lesion == 'mácula' %}selected{% endif %}>Mácula</option>
-                    <option value="erosión" {% if form_data.tipo_lesion == 'erosión' %}selected{% endif %}>Erosión</option>
-                    <option value="otra" {% if form_data.tipo_lesion == 'otra' %}selected{% endif %}>Otra</option>
-                </select>
+            {# 4. Diagnóstico #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">4 · Diagnóstico</p>
+                <div class="form-seccion-body">
+                    <div class="form-grid">
+                        <div class="form-field form-grid-full">
+                            <label>Diagnóstico principal</label>
+                            <input type="text" name="diagnostico" value="{{ fd.diagnostico | default('') }}"
+                                   placeholder="Ej: Dermatitis atópica, Psoriasis vulgar, Melanoma in situ">
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Diagnóstico diferencial</label>
+                            <textarea name="diagnostico_diferencial"
+                                      placeholder="Otros diagnósticos considerados...">{{ fd.diagnostico_diferencial | default('') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <label>Duración</label>
-                <input type="text" name="duracion" value="{{ form_data.duracion | default('') }}" placeholder="Ej: 3 días, 2 semanas, 1 mes">
+            {# 5. Plan terapéutico #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">5 · Plan terapéutico</p>
+                <div class="form-seccion-body">
+                    <div class="form-grid">
+                        <div class="form-field form-grid-full">
+                            <label>Estudios solicitados</label>
+                            <textarea name="estudios_solicitados"
+                                      placeholder="Ej: biopsia incisional, KOH directo, cultivo micológico, test del parche, dermatoscopía...">{{ fd.estudios_solicitados | default('') }}</textarea>
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Procedimientos realizados</label>
+                            <textarea name="procedimientos"
+                                      placeholder="Ej: crioterapia con N₂ líquido, electrocirugía, curetaje...">{{ fd.procedimientos | default('') }}</textarea>
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Tratamiento indicado</label>
+                            <textarea name="tratamiento"
+                                      placeholder="Medicamentos, dosis, vía de administración y duración...">{{ fd.tratamiento | default('') }}</textarea>
+                        </div>
+                        <div class="form-field form-grid-full">
+                            <label>Recomendaciones al paciente</label>
+                            <textarea name="recomendaciones"
+                                      placeholder="Cuidados, fotoprotección, evitar irritantes, conductas a seguir...">{{ fd.recomendaciones | default('') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <label>Severidad</label>
-                <select name="severidad">
-                    <option value="">Seleccionar...</option>
-                    <option value="leve" {% if form_data.severidad == 'leve' %}selected{% endif %}>Leve</option>
-                    <option value="moderada" {% if form_data.severidad == 'moderada' %}selected{% endif %}>Moderada</option>
-                    <option value="severa" {% if form_data.severidad == 'severa' %}selected{% endif %}>Severa</option>
-                </select>
+            {# 6. Notas internas #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">6 · Notas internas</p>
+                <div class="form-seccion-body">
+                    <div class="form-field">
+                        <label>Notas</label>
+                        <textarea name="notas"
+                                  placeholder="Observaciones para uso interno, recordatorios, contexto clínico relevante...">{{ fd.notas | default('') }}</textarea>
+                    </div>
+                </div>
+            </div>
 
-                <label>Evolución</label>
-                <select name="evolucion">
-                    <option value="">Seleccionar...</option>
-                    <option value="mejorando" {% if form_data.evolucion == 'mejorando' %}selected{% endif %}>Mejorando</option>
-                    <option value="estable" {% if form_data.evolucion == 'estable' %}selected{% endif %}>Estable</option>
-                    <option value="empeorando" {% if form_data.evolucion == 'empeorando' %}selected{% endif %}>Empeorando</option>
-                </select>
+            {# 7. Fotos #}
+            <div class="form-seccion">
+                <p class="form-seccion-titulo">7 · Registro fotográfico</p>
+                <div class="form-seccion-body">
+                    <div class="form-field">
+                        <label>Fotos de la lesión</label>
+                        <input type="file" name="archivos" accept=".jpg,.jpeg,.png,.webp" multiple>
+                        <span class="campo-hint">JPG, PNG o WebP · máx. 10 MB por foto · podés seleccionar varias a la vez</span>
+                    </div>
+                </div>
+            </div>
 
-                <label>Observaciones Clínicas</label>
-                <textarea name="observaciones_clinicas" placeholder="Hallazgos del examen físico">{{ form_data.observaciones_clinicas | default('') }}</textarea>
-            </fieldset>
-
-            <fieldset>
-                <legend>Tratamiento y Recomendaciones</legend>
-                <label>Tratamiento</label>
-                <textarea name="tratamiento" placeholder="Prescripciones, medicamentos, recomendaciones terapéuticas">{{ form_data.tratamiento | default('') }}</textarea>
-
-                <label>Recomendaciones</label>
-                <textarea name="recomendaciones" placeholder="Cuidados, seguimiento, próximas citas">{{ form_data.recomendaciones | default('') }}</textarea>
-
-                <label>Notas Adicionales</label>
-                <textarea name="notas" placeholder="Observaciones generales">{{ form_data.notas | default('') }}</textarea>
-            </fieldset>
-
-            <button type="submit">Guardar Consulta</button>
+            <div class="form-actions">
+                <button type="submit" class="btn-editar">Guardar consulta</button>
+                <a href="/pacientes/{{ paciente.id }}" class="btn-secondary">Cancelar</a>
+            </div>
         </form>
     </section>
 
@@ -110,6 +239,8 @@
                         <th>Diagnóstico</th>
                         <th>Severidad</th>
                         <th>Evolución</th>
+                        <th>Control</th>
+                        <th>Fotos</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -123,21 +254,47 @@
                         <td>{{ consulta.severidad or '-' }}</td>
                         <td>{{ consulta.evolucion or '-' }}</td>
                         <td>
+                            {% if consulta.proximo_control %}
+                                {% set estado = consulta.proximo_control | estado_control %}
+                                <span class="badge badge-{{ estado }}">{{ consulta.proximo_control }}</span>
+                            {% else %}
+                                <span class="badge badge-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="fotos-thumb-cell">
+                            {% for img in consulta.imagenes[:3] %}
+                                <a href="/consultas/{{ consulta.id }}" title="{{ img.descripcion or '' }}">
+                                    <img class="foto-thumb" src="/uploads/{{ img.filename }}" alt="foto">
+                                </a>
+                            {% endfor %}
+                            {% if consulta.imagenes | length > 3 %}
+                                <a href="/consultas/{{ consulta.id }}" class="fotos-mas">+{{ consulta.imagenes | length - 3 }}</a>
+                            {% endif %}
+                        </td>
+                        <td>
                             <a href="/consultas/{{ consulta.id }}" class="btn-ver">Ver</a>
                             <a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar</a>
                         </td>
                     </tr>
                     <tr class="consulta-detalle-row">
-                        <td colspan="7">
+                        <td colspan="9">
                             <details>
                                 <summary>Ver detalles</summary>
                                 <div class="consulta-detalle">
-                                    <p><strong>Tipo de Lesión:</strong> {{ consulta.tipo_lesion or '-' }}</p>
+                                    <p><strong>Lesión primaria:</strong> {{ consulta.tipo_lesion or '-' }}</p>
+                                    <p><strong>Lesión secundaria:</strong> {{ consulta.lesion_secundaria or '-' }}</p>
+                                    <p><strong>Síntomas:</strong> {{ consulta.sintomas or '-' }}</p>
+                                    <p><strong>Factores desencadenantes:</strong> {{ consulta.factores_desencadenantes or '-' }}</p>
                                     <p><strong>Duración:</strong> {{ consulta.duracion or '-' }}</p>
+                                    <p><strong>Diagnóstico diferencial:</strong> {{ consulta.diagnostico_diferencial or '-' }}</p>
+                                    <p><strong>Estudios solicitados:</strong> {{ consulta.estudios_solicitados or '-' }}</p>
                                     <p><strong>Observaciones:</strong> {{ consulta.observaciones_clinicas or 'No hay' }}</p>
                                     <p><strong>Tratamiento:</strong> {{ consulta.tratamiento or 'No hay' }}</p>
                                     <p><strong>Recomendaciones:</strong> {{ consulta.recomendaciones or 'No hay' }}</p>
                                     <p><strong>Notas:</strong> {{ consulta.notas or 'No hay' }}</p>
+                                    {% if consulta.proximo_control %}
+                                    <p><strong>Próximo control:</strong> {{ consulta.proximo_control }}</p>
+                                    {% endif %}
                                 </div>
                             </details>
                         </td>

@@ -19,11 +19,13 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://user:password@db:5432/historias_db
+      SECRET_KEY: cambiar-esto-antes-del-deploy-por-una-clave-larga-y-aleatoria
 
 volumes:
   db_data:

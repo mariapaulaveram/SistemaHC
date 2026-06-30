@@ -24,5 +24,6 @@ __pycache__/
 .DS_Store
 
 # Scripts de testing manual (no hacen falta dentro de la imagen)
-scripts/
-test_search.py
+scripts/test_*.py
+scripts/pacientes.py
+scripts/consultas.py
