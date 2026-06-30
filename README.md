@@ -54,41 +54,58 @@ función en Python devuelve HTML, HTMX agrega interactividad sin escribir JS.
 ## 5. Estructura del proyecto
 
 ```
-historias-clinicas/
+SistemaHC/
 ├── app/
-│   ├── main.py          # FastAPI app
-│   ├── models.py        # Paciente, Consulta (SQLAlchemy)
-│   ├── database.py      # conexión a Postgres
+│   ├── main.py            # FastAPI app + dashboard
+│   ├── models.py          # Paciente, Consulta (SQLAlchemy)
+│   ├── schemas.py         # Esquemas Pydantic (para la API JSON)
+│   ├── database.py        # conexión a Postgres
+│   ├── utils.py           # flash messages, helper de render
 │   ├── routers/
 │   │   ├── pacientes.py
 │   │   └── consultas.py
-│   └── templates/       # HTML con Jinja2
+│   ├── static/css/        # estilos (paleta azul/blanco, sobria)
+│   └── templates/         # HTML con Jinja2 + HTMX
+├── scripts/                # scripts de prueba manual (no entran en la imagen Docker)
 ├── docker-compose.yml
 ├── Dockerfile
+├── .gitignore
+├── .dockerignore
 └── requirements.txt
 ```
 
+**Nota:** el modelo de `Paciente` se amplió respecto al plan original con campos
+dermatológicos (tipo de piel, alergias, medicaciones actuales), y el de
+`Consulta` con campos clínicos específicos de dermatología (zona afectada,
+tipo de lesión, severidad, evolución). Surgió al construir, tiene sentido
+para el caso de uso real de mi hermana (dermatóloga).
+
 ## 6. Roadmap por etapas (cada etapa funciona antes de pasar a la siguiente)
 
-### Etapa 0 — Setup base
-- [ ] Dockerfile + docker-compose.yml (app + Postgres)
-- [ ] Conexión de FastAPI a Postgres funcionando (`docker compose up`)
-- [ ] Página de health-check (`/health`) para confirmar que todo levanta
+### Etapa 0 — Setup base ✅ Completa
+- [x] Dockerfile + docker-compose.yml (app + Postgres)
+- [x] Conexión de FastAPI a Postgres funcionando (`docker compose up`)
+- [x] Volumen persistente de Postgres (los datos sobreviven a recrear contenedores)
 
-### Etapa 1 — Pacientes
-- [ ] Modelo de datos: Paciente (nombre, DNI, fecha de nacimiento, contacto,
-  antecedentes)
-- [ ] Alta de paciente (formulario)
-- [ ] Listado y búsqueda de pacientes
-- [ ] Ficha de paciente (vista de detalle)
-- [ ] Edición de datos del paciente
+### Etapa 1 — Pacientes ✅ Completa
+- [x] Modelo de datos: Paciente (nombre, DNI, fecha de nacimiento, contacto,
+  antecedentes + campos dermatológicos: tipo de piel, alergias, medicaciones)
+- [x] Alta de paciente (formulario, página propia `/pacientes/nuevo`)
+- [x] Listado y búsqueda de pacientes (por nombre o DNI exacto, con redirect
+  directo a la ficha si el DNI matchea)
+- [x] Filtros adicionales: por tipo de piel, por presencia de antecedentes
+- [x] Ordenamiento (por nombre, DNI o fecha de nacimiento, asc/desc)
+- [x] Ficha de paciente (vista de detalle)
+- [x] Edición de datos del paciente
 
-### Etapa 2 — Consultas (el historial clínico en sí)
-- [ ] Modelo de datos: Consulta (fecha, motivo, diagnóstico, tratamiento,
-  notas, vinculada a un paciente)
-- [ ] Agregar consulta desde la ficha del paciente
-- [ ] Ver historial completo de consultas de un paciente, ordenado por fecha
-- [ ] Editar/corregir una consulta ya cargada
+### Etapa 2 — Consultas (el historial clínico en sí) ✅ Completa
+- [x] Modelo de datos: Consulta (fecha, motivo, diagnóstico, tratamiento,
+  notas + campos dermatológicos: zona afectada, tipo de lesión, severidad,
+  evolución, observaciones clínicas, recomendaciones)
+- [x] Agregar consulta desde la ficha del paciente
+- [x] Ver historial completo de consultas de un paciente, ordenado por fecha
+- [x] Ver detalle de una consulta individual
+- [x] Editar/corregir una consulta ya cargada
 
 ### Etapa 3 — Login y seguridad
 - [ ] Modelo de Usuario (mi hermana, por ahora una sola cuenta)
@@ -109,7 +126,34 @@ historias-clinicas/
 - [ ] README claro en el repo (qué es, stack, cómo correrlo) — esto también
   suma para CV
 
-## 7. Cómo se habla de esto en el CV / entrevista
+## 7. Auditoría de código (junio 2026)
+
+Antes de avanzar a login y deploy, se hizo una revisión completa del código
+existente — corriendo cada flujo de verdad (no solo leyendo), para encontrar
+bugs reales antes de construir más funcionalidad encima.
+
+**Bugs corregidos:**
+- 🔴 **Crítico:** el `docker-compose.yml` no tenía volumen persistente para
+  Postgres — cualquier recreación del contenedor borraba todos los datos.
+  Se agregó un volumen nombrado (`db_data`).
+- 🟠 Los campos vacíos de paciente/consulta se mostraban como el texto
+  literal `"None"` en los formularios de edición (bug de Jinja2 al imprimir
+  valores `None` sin manejar). Corregido en `paciente_editar.html` y
+  `consulta_editar.html`.
+- 🟡 Referencia a un archivo `forms.css` que no existía y nunca se cargaba
+  (código muerto de una iteración anterior). Eliminada.
+
+**Mejoras de infraestructura y mantenibilidad:**
+- Se agregó `.gitignore` (faltaba) y se sacaron del repo 18 archivos
+  `__pycache__` que se habían colado en commits anteriores.
+- Se agregó `.dockerignore` para que la imagen de Docker no copie `.venv`,
+  `.git` y archivos de prueba locales (eran ~45 MB de más en cada build).
+- Se fijaron las versiones exactas en `requirements.txt` (antes sin pinear),
+  probadas de punta a punta antes de fijarlas, para builds reproducibles.
+- Se ordenaron los scripts de prueba manual en `scripts/`, separados del
+  código de producción.
+
+## 8. Cómo se habla de esto en el CV / entrevista
 
 - "Diseñé y desarrollé un sistema de historias clínicas electrónicas con
   FastAPI, PostgreSQL y Docker, en uso real por una médica."
@@ -118,9 +162,18 @@ historias-clinicas/
   sensibles, deploy con contenedores.
 - A diferencia de instalar un sistema ya hecho, todo el código y las
   decisiones son propias y se pueden explicar en detalle.
+- La auditoría de código (sección 7) también es material de entrevista: poder
+  explicar cómo se encontró y corrigió un riesgo real de pérdida de datos
+  (volumen de Docker faltante) antes de que pasara con datos de pacientes
+  reales, demuestra criterio, no solo capacidad de escribir código nuevo.
 
-## 8. Próximo paso inmediato
+## 9. Próximo paso inmediato
 
-Armar la Etapa 0: Dockerfile, docker-compose.yml, y la conexión inicial de
-FastAPI con Postgres, para tener algo corriendo localmente antes de escribir
-cualquier modelo de datos.
+Etapas 0, 1 y 2 completas y auditadas. Lo que sigue:
+- **Etapa 3** — Login y seguridad (todavía no empezada: el sistema hoy es
+  accesible sin autenticación, válido para desarrollo local pero no para
+  producción).
+- **Etapa 4** — Elegir entre exportar a PDF o dashboard con Pandas.
+- **Etapa 5** — Deploy a un hosting real con Postgres administrado (Railway,
+  Render, Supabase o Neon), para que sea accesible desde cualquier lugar
+  con internet, no solo en `localhost`.
