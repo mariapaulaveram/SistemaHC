@@ -16,59 +16,59 @@
             <input type="text" name="motivo" value="{{ form_data.motivo | default(consulta.motivo) }}" required>
 
             <label>Diagnóstico</label>
-            <input type="text" name="diagnostico" value="{{ form_data.diagnostico | default(consulta.diagnostico) }}">
+            <input type="text" name="diagnostico" value="{{ form_data.diagnostico | default(consulta.diagnostico or '') }}">
         </fieldset>
 
         <fieldset>
             <legend>Descripción Clínica</legend>
             <label>Zona Afectada</label>
-            <input type="text" name="zona_afectada" value="{{ form_data.zona_afectada | default(consulta.zona_afectada) }}">
+            <input type="text" name="zona_afectada" value="{{ form_data.zona_afectada | default(consulta.zona_afectada or '') }}">
 
             <label>Tipo de Lesión</label>
             <select name="tipo_lesion">
                 <option value="">Seleccionar...</option>
-                <option value="papula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'papula' %}selected{% endif %}>Pápula</option>
-                <option value="placa" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'placa' %}selected{% endif %}>Placa</option>
-                <option value="vesícula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'vesícula' %}selected{% endif %}>Vesícula</option>
-                <option value="pústula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'pústula' %}selected{% endif %}>Pústula</option>
-                <option value="mácula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'mácula' %}selected{% endif %}>Mácula</option>
-                <option value="erosión" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'erosión' %}selected{% endif %}>Erosión</option>
-                <option value="otra" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion)) == 'otra' %}selected{% endif %}>Otra</option>
+                <option value="papula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'papula' %}selected{% endif %}>Pápula</option>
+                <option value="placa" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'placa' %}selected{% endif %}>Placa</option>
+                <option value="vesícula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'vesícula' %}selected{% endif %}>Vesícula</option>
+                <option value="pústula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'pústula' %}selected{% endif %}>Pústula</option>
+                <option value="mácula" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'mácula' %}selected{% endif %}>Mácula</option>
+                <option value="erosión" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'erosión' %}selected{% endif %}>Erosión</option>
+                <option value="otra" {% if (form_data.tipo_lesion | default(consulta.tipo_lesion or '')) == 'otra' %}selected{% endif %}>Otra</option>
             </select>
 
             <label>Duración</label>
-            <input type="text" name="duracion" value="{{ form_data.duracion | default(consulta.duracion) }}">
+            <input type="text" name="duracion" value="{{ form_data.duracion | default(consulta.duracion or '') }}">
 
             <label>Severidad</label>
             <select name="severidad">
                 <option value="">Seleccionar...</option>
-                <option value="leve" {% if (form_data.severidad | default(consulta.severidad)) == 'leve' %}selected{% endif %}>Leve</option>
-                <option value="moderada" {% if (form_data.severidad | default(consulta.severidad)) == 'moderada' %}selected{% endif %}>Moderada</option>
-                <option value="severa" {% if (form_data.severidad | default(consulta.severidad)) == 'severa' %}selected{% endif %}>Severa</option>
+                <option value="leve" {% if (form_data.severidad | default(consulta.severidad or '')) == 'leve' %}selected{% endif %}>Leve</option>
+                <option value="moderada" {% if (form_data.severidad | default(consulta.severidad or '')) == 'moderada' %}selected{% endif %}>Moderada</option>
+                <option value="severa" {% if (form_data.severidad | default(consulta.severidad or '')) == 'severa' %}selected{% endif %}>Severa</option>
             </select>
 
             <label>Evolución</label>
             <select name="evolucion">
                 <option value="">Seleccionar...</option>
-                <option value="mejorando" {% if (form_data.evolucion | default(consulta.evolucion)) == 'mejorando' %}selected{% endif %}>Mejorando</option>
-                <option value="estable" {% if (form_data.evolucion | default(consulta.evolucion)) == 'estable' %}selected{% endif %}>Estable</option>
-                <option value="empeorando" {% if (form_data.evolucion | default(consulta.evolucion)) == 'empeorando' %}selected{% endif %}>Empeorando</option>
+                <option value="mejorando" {% if (form_data.evolucion | default(consulta.evolucion or '')) == 'mejorando' %}selected{% endif %}>Mejorando</option>
+                <option value="estable" {% if (form_data.evolucion | default(consulta.evolucion or '')) == 'estable' %}selected{% endif %}>Estable</option>
+                <option value="empeorando" {% if (form_data.evolucion | default(consulta.evolucion or '')) == 'empeorando' %}selected{% endif %}>Empeorando</option>
             </select>
 
             <label>Observaciones Clínicas</label>
-            <textarea name="observaciones_clinicas">{{ form_data.observaciones_clinicas | default(consulta.observaciones_clinicas) }}</textarea>
+            <textarea name="observaciones_clinicas">{{ form_data.observaciones_clinicas | default(consulta.observaciones_clinicas or '') }}</textarea>
         </fieldset>
 
         <fieldset>
             <legend>Tratamiento y Recomendaciones</legend>
             <label>Tratamiento</label>
-            <textarea name="tratamiento">{{ form_data.tratamiento | default(consulta.tratamiento) }}</textarea>
+            <textarea name="tratamiento">{{ form_data.tratamiento | default(consulta.tratamiento or '') }}</textarea>
 
             <label>Recomendaciones</label>
-            <textarea name="recomendaciones">{{ form_data.recomendaciones | default(consulta.recomendaciones) }}</textarea>
+            <textarea name="recomendaciones">{{ form_data.recomendaciones | default(consulta.recomendaciones or '') }}</textarea>
 
             <label>Notas Adicionales</label>
-            <textarea name="notas">{{ form_data.notas | default(consulta.notas) }}</textarea>
+            <textarea name="notas">{{ form_data.notas | default(consulta.notas or '') }}</textarea>
         </fieldset>
 
         <button type="submit">Guardar cambios</button>

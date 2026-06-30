@@ -1,7 +1,4 @@
 {% extends "base.html" %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', path='/css/forms.css') }}">
-{% endblock %}
 {% block content %}
     <a href="/pacientes/{{ paciente.id }}">← Volver a la ficha</a>
     <h1>Editar Paciente</h1>
@@ -15,8 +12,8 @@
             <legend>Datos Personales</legend>
             <input type="text" name="nombre" value="{{ paciente.nombre }}" placeholder="Nombre Completo" required>
             <input type="text" name="dni" value="{{ paciente.dni }}" placeholder="DNI" required>
-            <input type="date" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento }}">
-            <input type="text" name="telefono" value="{{ paciente.telefono }}" placeholder="Teléfono">
+            <input type="date" name="fecha_nacimiento" value="{{ paciente.fecha_nacimiento or '' }}">
+            <input type="text" name="telefono" value="{{ paciente.telefono or '' }}" placeholder="Teléfono">
         </fieldset>
 
         <fieldset>
@@ -28,13 +25,13 @@
                 <option value="oscura" {% if paciente.tipo_piel == 'oscura' %}selected{% endif %}>Piel Oscura</option>
                 <option value="muy_oscura" {% if paciente.tipo_piel == 'muy_oscura' %}selected{% endif %}>Piel Muy Oscura</option>
             </select>
-            <textarea name="alergias" placeholder="Alergias conocidas">{{ paciente.alergias }}</textarea>
-            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales">{{ paciente.medicaciones_actuales }}</textarea>
+            <textarea name="alergias" placeholder="Alergias conocidas">{{ paciente.alergias or '' }}</textarea>
+            <textarea name="medicaciones_actuales" placeholder="Medicaciones actuales">{{ paciente.medicaciones_actuales or '' }}</textarea>
         </fieldset>
 
         <fieldset>
             <legend>Antecedentes</legend>
-            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes">{{ paciente.antecedentes }}</textarea>
+            <textarea name="antecedentes" placeholder="Antecedentes médicos relevantes">{{ paciente.antecedentes or '' }}</textarea>
         </fieldset>
 
         <button type="submit">Guardar Cambios</button>

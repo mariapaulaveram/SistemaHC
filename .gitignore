@@ -1,0 +1,20 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos local de pruebas (si se corre sin Docker)
+*.db
+*.sqlite3
+
+# Variables de entorno con secretos
+.env
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
