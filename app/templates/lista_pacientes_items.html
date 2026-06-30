@@ -1,10 +1,18 @@
-<ul class="pacientes-lista">
+{% if pacientes %}
+<div class="dp-list">
     {% for p in pacientes %}
-    <li>
-        <a href="/pacientes/{{ p.id }}">{{ p.nombre }}</a>
-        <span>{{ p.dni }}</span>
-    </li>
-    {% else %}
-    <li>No hay pacientes registrados.</li>
+    <a href="/pacientes/{{ p.id }}" class="dp-item">
+        <div class="dp-avatar">{{ p.nombre[0] | upper }}</div>
+        <div class="dp-info">
+            <span class="dp-nombre">{{ p.nombre }}</span>
+            <span class="dp-meta">
+                {% if p.fecha_nacimiento %}{{ p.fecha_nacimiento | calcular_edad }} a · {% endif %}{{ p.dni or '—' }}
+            </span>
+        </div>
+        <svg class="dp-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
     {% endfor %}
-</ul>
+</div>
+{% else %}
+<p class="dp-empty">No hay pacientes registrados.</p>
+{% endif %}
