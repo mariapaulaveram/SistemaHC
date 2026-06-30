@@ -1,0 +1,28 @@
+# Entorno virtual (se instala de nuevo dentro del contenedor via requirements.txt)
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Control de versiones
+.git/
+.gitignore
+
+# Bases de datos locales de prueba
+*.db
+*.sqlite3
+
+# Variables de entorno con secretos
+.env
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+
+# Scripts de testing manual (no hacen falta dentro de la imagen)
+scripts/
+test_search.py
