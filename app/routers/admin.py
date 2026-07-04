@@ -32,7 +32,7 @@ def crear_usuario(
     db: Session = Depends(database.get_db),
 ):
     check_csrf(csrf_token, request)
-    if rol not in ("admin", "medico"):
+    if rol not in ("admin", "medico", "demo"):
         rol = "medico"
     existente = db.query(models.Usuario).filter(models.Usuario.email == email).first()
     if existente:
@@ -83,7 +83,7 @@ def cambiar_rol(
     mi_id = get_current_user_id(request)
     if usuario_id == mi_id:
         raise HTTPException(status_code=400, detail="No podés cambiar tu propio rol.")
-    if rol not in ("admin", "medico"):
+    if rol not in ("admin", "medico", "demo"):
         raise HTTPException(status_code=400)
     usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
     if not usuario:

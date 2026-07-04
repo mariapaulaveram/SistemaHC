@@ -42,13 +42,27 @@
                     <div class="admin-actions">
                         {# Cambiar rol #}
                         {% if u.id != current_user_id %}
+                        {% if u.rol != 'admin' %}
                         <form method="post" action="/admin/usuarios/{{ u.id }}/cambiar-rol" style="display:contents">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <input type="hidden" name="rol" value="{{ 'medico' if u.rol == 'admin' else 'admin' }}">
-                            <button type="submit" class="btn-secondary btn-xs">
-                                {{ '↓ Médico' if u.rol == 'admin' else '↑ Admin' }}
-                            </button>
+                            <input type="hidden" name="rol" value="admin">
+                            <button type="submit" class="btn-secondary btn-xs">↑ Admin</button>
                         </form>
+                        {% endif %}
+                        {% if u.rol != 'medico' %}
+                        <form method="post" action="/admin/usuarios/{{ u.id }}/cambiar-rol" style="display:contents">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="rol" value="medico">
+                            <button type="submit" class="btn-secondary btn-xs">Médico</button>
+                        </form>
+                        {% endif %}
+                        {% if u.rol != 'demo' %}
+                        <form method="post" action="/admin/usuarios/{{ u.id }}/cambiar-rol" style="display:contents">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="rol" value="demo">
+                            <button type="submit" class="btn-secondary btn-xs">Demo</button>
+                        </form>
+                        {% endif %}
                         {# Eliminar #}
                         <form method="post" action="/admin/usuarios/{{ u.id }}/eliminar" style="display:contents"
                               onsubmit="return confirm('¿Eliminar a {{ u.nombre or u.email }}? Sus consultas quedarán sin médico asignado.')">
@@ -91,6 +105,7 @@
                 <select name="rol" class="form-control">
                     <option value="medico" selected>Médico</option>
                     <option value="admin">Administrador</option>
+                    <option value="demo">Demo (solo lectura)</option>
                 </select>
             </div>
         </div>
