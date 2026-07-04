@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from . import models
-from .auth import require_login, get_current_user_id
+from .auth import require_login, get_current_user_id, LoginRequired
 from .database import engine, get_db
 from .routers import pacientes, consultas, imagenes, admin, perfil
 from .routers import auth as auth_router
@@ -61,6 +61,11 @@ app.include_router(consultas.router)
 app.include_router(imagenes.router)
 app.include_router(admin.router)
 app.include_router(perfil.router)
+
+
+@app.exception_handler(LoginRequired)
+async def login_required_handler(request: Request, exc: LoginRequired):
+    return RedirectResponse(url="/login", status_code=303)
 
 
 @app.exception_handler(StarletteHTTPException)

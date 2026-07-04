@@ -83,20 +83,26 @@ def verify_csrf_token(token: str | None, user_id: int | None) -> bool:
         return False
 
 
+# ── Excepciones de autenticación ─────────────────────────────────────────────
+
+class LoginRequired(Exception):
+    """Se lanza cuando una ruta requiere login y el usuario no está autenticado."""
+    pass
+
+
 # ── Dependencies para proteger rutas ─────────────────────────────────────────
 
 def require_login(request: Request):
     user_id = get_current_user_id(request)
     if user_id is None:
-        next_url = str(request.url)
-        return RedirectResponse(url=f"/login?next={next_url}", status_code=303)
+        raise LoginRequired()
     return user_id
 
 
 def require_admin(request: Request):
     user_id = get_current_user_id(request)
     if user_id is None:
-        return RedirectResponse(url="/login", status_code=303)
+        raise LoginRequired()
     if not is_admin(request):
         raise HTTPException(status_code=403, detail="Acceso restringido a administradores.")
     return user_id
