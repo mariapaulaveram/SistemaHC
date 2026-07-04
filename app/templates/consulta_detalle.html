@@ -5,12 +5,14 @@
 <div class="pd-topbar">
     <a href="/pacientes/{{ consulta.paciente_id }}" class="pd-back">← Volver al paciente</a>
     <div class="pd-actions">
+        {% if not current_user_is_demo %}
         <a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar consulta</a>
         <form method="post" action="/consultas/{{ consulta.id }}/eliminar" style="display:contents"
               onsubmit="return confirm('¿Eliminar esta consulta? Esta acción no se puede deshacer.')">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn-eliminar">Eliminar</button>
         </form>
+        {% endif %}
     </div>
 </div>
 
@@ -238,6 +240,7 @@
     <p class="cd-fotos-empty">No hay fotos registradas para esta consulta.</p>
     {% endif %}
 
+    {% if not current_user_is_demo %}
     <div class="cd-foto-upload">
         <p class="cd-upload-label">Agregar foto</p>
         <form method="post" action="/consultas/{{ consulta.id }}/imagenes" enctype="multipart/form-data">
@@ -250,6 +253,7 @@
             <p class="campo-hint">JPG, PNG o WebP — máx. 10 MB</p>
         </form>
     </div>
+    {% endif %}
 </section>
 
 {% endblock %}

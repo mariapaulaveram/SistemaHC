@@ -6,10 +6,10 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from .. import models, database
-from ..auth import require_login
+from ..auth import require_login, require_not_demo
 from ..utils import set_flash_message, check_csrf
 
-router = APIRouter(tags=["imagenes"], dependencies=[Depends(require_login)])
+router = APIRouter(tags=["imagenes"], dependencies=[Depends(require_login), Depends(require_not_demo)])
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from . import models
-from .auth import require_login, get_current_user_id, LoginRequired
+from .auth import require_login, get_current_user_id, LoginRequired, DemoRestricted
 from .database import engine, get_db
 from .routers import pacientes, consultas, imagenes, admin, perfil
 from .routers import auth as auth_router
@@ -90,6 +90,14 @@ app.include_router(perfil.router)
 @app.exception_handler(LoginRequired)
 async def login_required_handler(request: Request, exc: LoginRequired):
     return RedirectResponse(url="/login", status_code=303)
+
+
+@app.exception_handler(DemoRestricted)
+async def demo_restricted_handler(request: Request, exc: DemoRestricted):
+    from .utils import set_flash_message
+    response = RedirectResponse(url=request.headers.get("referer", "/"), status_code=303)
+    set_flash_message(response, "⚠️ Cuenta demo — solo lectura. No se pueden realizar cambios.")
+    return response
 
 
 @app.exception_handler(StarletteHTTPException)

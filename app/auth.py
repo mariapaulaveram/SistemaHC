@@ -63,6 +63,10 @@ def is_admin(request: Request) -> bool:
     return get_current_user_rol(request) == "admin"
 
 
+def is_demo(request: Request) -> bool:
+    return get_current_user_rol(request) == "demo"
+
+
 def delete_session_cookie(response) -> None:
     response.delete_cookie(SESSION_COOKIE, path="/")
 
@@ -90,6 +94,11 @@ class LoginRequired(Exception):
     pass
 
 
+class DemoRestricted(Exception):
+    """Se lanza cuando un usuario demo intenta una acción de escritura."""
+    pass
+
+
 # ── Dependencies para proteger rutas ─────────────────────────────────────────
 
 def require_login(request: Request):
@@ -97,6 +106,12 @@ def require_login(request: Request):
     if user_id is None:
         raise LoginRequired()
     return user_id
+
+
+def require_not_demo(request: Request):
+    """Bloquea acciones de escritura para usuarios demo."""
+    if is_demo(request):
+        raise DemoRestricted()
 
 
 def require_admin(request: Request):

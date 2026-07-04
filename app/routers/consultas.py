@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates  # kept for type hints
 from sqlalchemy.orm import Session
 from .. import models, schemas, database
-from ..auth import require_login, get_current_user_id
+from ..auth import require_login, get_current_user_id, require_not_demo
 from ..utils import render_template, make_templates, set_flash_message, check_csrf
 
 router = APIRouter(prefix="/consultas", tags=["consultas"], dependencies=[Depends(require_login)])
@@ -53,7 +53,7 @@ def _parse_date(value: str | None):
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-@router.post("/pacientes/{paciente_id}")
+@router.post("/pacientes/{paciente_id}", dependencies=[Depends(require_not_demo)])
 async def crear_consulta(
     paciente_id: int,
     request: Request,
@@ -157,7 +157,7 @@ def ver_consulta(consulta_id: int, request: Request, db: Session = Depends(datab
     return render_template(templates, request, "consulta_detalle.html", {"consulta": consulta})
 
 
-@router.post("/{consulta_id}/editar")
+@router.post("/{consulta_id}/editar", dependencies=[Depends(require_not_demo)])
 def editar_consulta(
     consulta_id: int,
     request: Request,
@@ -222,7 +222,7 @@ def editar_consulta(
     return response
 
 
-@router.post("/{consulta_id}/eliminar")
+@router.post("/{consulta_id}/eliminar", dependencies=[Depends(require_not_demo)])
 def eliminar_consulta(
     consulta_id: int,
     request: Request,

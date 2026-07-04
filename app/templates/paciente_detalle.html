@@ -8,12 +8,14 @@
     <a href="/pacientes" class="pd-back">← Pacientes</a>
     <div class="pd-actions">
         <a href="/pacientes/{{ paciente.id }}/imprimir" class="btn-secondary" target="_blank">🖨 Imprimir HC</a>
+        {% if not current_user_is_demo %}
         <a href="/pacientes/{{ paciente.id }}/editar" class="btn-editar">Editar</a>
         <form method="post" action="/pacientes/{{ paciente.id }}/eliminar" style="display:contents"
               onsubmit="return confirm('¿Eliminar a {{ paciente.nombre }}? Se borrarán todas sus consultas e imágenes. Esta acción no se puede deshacer.')">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn-eliminar">Eliminar</button>
         </form>
+        {% endif %}
     </div>
 </div>
 
@@ -201,6 +203,7 @@
 </section>
 
 {# ── Nueva Consulta (colapsable) ── #}
+{% if not current_user_is_demo %}
 <section class="pd-section">
     <details class="nueva-consulta-details">
         <summary class="nueva-consulta-summary">
@@ -392,5 +395,6 @@
         </div>
     </details>
 </section>
+{% endif %}
 
 {% endblock %}

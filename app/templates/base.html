@@ -27,7 +27,7 @@
             <li><a href="/">Dashboard</a></li>
             <li><a href="/pacientes">Pacientes</a></li>
             <li><a href="/calendario">Calendario</a></li>
-            <li><a href="/pacientes/nuevo">Nuevo paciente</a></li>
+            {% if not current_user_is_demo %}<li><a href="/pacientes/nuevo">Nuevo paciente</a></li>{% endif %}
             {% if current_user_is_admin %}
             <li><a href="/admin/usuarios" class="nav-link-admin">Usuarios</a></li>
             {% endif %}

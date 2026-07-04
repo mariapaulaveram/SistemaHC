@@ -3,7 +3,7 @@ from datetime import date
 from typing import Any
 from fastapi import Request, Response, HTTPException
 from fastapi.templating import Jinja2Templates
-from .auth import get_current_user_id, create_csrf_token, verify_csrf_token, is_admin as _is_admin
+from .auth import get_current_user_id, create_csrf_token, verify_csrf_token, is_admin as _is_admin, is_demo as _is_demo
 
 FLASH_COOKIE = "flash_messages"
 
@@ -62,6 +62,7 @@ def render_template(
     user_id = get_current_user_id(request)
     context.setdefault("csrf_token", create_csrf_token(user_id) if user_id else "")
     context.setdefault("current_user_is_admin", _is_admin(request))
+    context.setdefault("current_user_is_demo", _is_demo(request))
     response = templates.TemplateResponse(request=request, name=name, context=context)
     response.delete_cookie(FLASH_COOKIE, path="/")
     return response

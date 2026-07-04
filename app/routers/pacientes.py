@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, asc, desc
 from .. import models, schemas, database
-from ..auth import require_login
+from ..auth import require_login, require_not_demo
 from ..utils import render_template, make_templates, set_flash_message, check_csrf
 import os
 
@@ -198,7 +198,7 @@ def editar_paciente_form(request: Request, paciente_id: int, db: Session = Depen
     return render_template(templates, request, "paciente_editar.html", {"paciente": paciente, "error": None})
 
 
-@router.post("/{paciente_id}/editar")
+@router.post("/{paciente_id}/editar", dependencies=[Depends(require_not_demo)])
 def editar_paciente(
     request: Request,
     paciente_id: int,
@@ -259,7 +259,7 @@ def ver_paciente(request: Request, paciente_id: int, db: Session = Depends(datab
     return render_template(templates, request, "paciente_detalle.html", {"paciente": paciente, "consultas": consultas})
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(require_not_demo)])
 def crear_paciente_web(
     request: Request,
     csrf_token: str = Form(default=""),
@@ -327,7 +327,7 @@ def imprimir_paciente(request: Request, paciente_id: int, db: Session = Depends(
     })
 
 
-@router.post("/{paciente_id}/eliminar")
+@router.post("/{paciente_id}/eliminar", dependencies=[Depends(require_not_demo)])
 def eliminar_paciente(
     request: Request,
     paciente_id: int,
