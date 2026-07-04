@@ -10,6 +10,13 @@ FLASH_COOKIE = "flash_messages"
 
 # ── Filtros Jinja2 compartidos ────────────────────────────────────────────────
 
+def _img_url(filename: str) -> str:
+    """Devuelve la URL de la imagen: Cloudinary (http) o ruta local."""
+    if filename and filename.startswith("http"):
+        return filename
+    return f"/uploads/{filename}"
+
+
 def _calcular_edad(fecha_nacimiento):
     if not fecha_nacimiento:
         return None
@@ -33,6 +40,7 @@ def make_templates(directory: str) -> Jinja2Templates:
     t = Jinja2Templates(directory=directory)
     t.env.filters["calcular_edad"] = _calcular_edad
     t.env.filters["estado_control"] = _estado_control
+    t.env.filters["img_url"] = _img_url
     return t
 
 

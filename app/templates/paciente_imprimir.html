@@ -308,7 +308,7 @@
         <div><label style="font-size:7pt;font-weight:600;color:#5c6b7a;text-transform:uppercase;letter-spacing:.04em">Fotos ({{ consulta.imagenes | length }})</label>
             <div class="fotos-grid">
                 {% for img in consulta.imagenes %}
-                <img class="foto-print" src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or '' }}">
+                <img class="foto-print" src="{{ img.filename | img_url }}" alt="{{ img.descripcion or '' }}">
                 {% endfor %}
             </div>
         </div>

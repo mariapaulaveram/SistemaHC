@@ -217,8 +217,8 @@
     <div class="cd-galeria">
         {% for img in consulta.imagenes %}
         <div class="cd-foto-card">
-            <a href="/uploads/{{ img.filename }}" target="_blank" class="cd-foto-link">
-                <img class="cd-foto-img" src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or 'Foto de lesión' }}">
+            <a href="{{ img.filename | img_url }}" target="_blank" class="cd-foto-link">
+                <img class="cd-foto-img" src="{{ img.filename | img_url }}" alt="{{ img.descripcion or 'Foto de lesión' }}">
                 <div class="cd-foto-overlay">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>

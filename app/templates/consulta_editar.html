@@ -189,8 +189,8 @@
                 <div class="fotos-galeria">
                     {% for img in consulta.imagenes %}
                     <div class="foto-card">
-                        <a href="/uploads/{{ img.filename }}" target="_blank">
-                            <img src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or 'Foto' }}">
+                        <a href="{{ img.filename | img_url }}" target="_blank">
+                            <img src="{{ img.filename | img_url }}" alt="{{ img.descripcion or 'Foto' }}">
                         </a>
                         {% if img.descripcion %}<p class="foto-descripcion">{{ img.descripcion }}</p>{% endif %}
                         <form method="post" action="/imagenes/{{ img.id }}/eliminar"

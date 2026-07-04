@@ -175,7 +175,7 @@
                         <td class="hc-fotos">
                             {% if consulta.imagenes %}
                                 <a href="/consultas/{{ consulta.id }}" class="cc-thumb-wrap">
-                                    <img class="cc-thumb" src="/uploads/{{ consulta.imagenes[0].filename }}" alt="foto">
+                                    <img class="cc-thumb" src="{{ consulta.imagenes[0].filename | img_url }}" alt="foto">
                                     {% if consulta.imagenes | length > 1 %}
                                         <span class="cc-thumb-count">+{{ consulta.imagenes | length - 1 }}</span>
                                     {% endif %}
