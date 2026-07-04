@@ -115,4 +115,17 @@
     </form>
 </div>
 
+{# ── Cargar datos de demo ── #}
+<div class="card">
+    <div class="pl-header">
+        <h2 class="pl-title">Datos de demo</h2>
+    </div>
+    <p style="margin:0 0 12px;color:#666;font-size:14px">Carga 6 pacientes ficticios con consultas dermatológicas completas. Solo funciona si hay menos de 3 pacientes cargados.</p>
+    <form method="post" action="/admin/seed-demo"
+          onsubmit="return confirm('¿Cargar los pacientes de demo? Esta acción no se puede deshacer.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-editar">Cargar pacientes demo</button>
+    </form>
+</div>
+
 {% endblock %}
