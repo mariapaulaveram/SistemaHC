@@ -71,6 +71,18 @@ SistemaHC/
 └── requirements.txt
 ```
 
+## Demo en vivo
+
+**URL:** https://sistemahc.onrender.com
+
+| Email | Contraseña | Rol |
+|---|---|---|
+| demo@sistemahc.com | demo1234 | Solo lectura |
+
+> La instancia gratuita puede tardar ~30 segundos en despertar si estuvo inactiva.
+
+---
+
 ## Correr en local
 
 ```bash
