@@ -2,29 +2,40 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HC-System</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/base.css') }}">
 </head>
 <body>
-    <nav class="navbar">
+    <!-- Barra superior: logo + cuenta -->
+    <header class="top-bar">
         <a href="/" class="nav-logo">🩺 HC-System</a>
+        <div class="top-bar-right">
+            <a href="/perfil" class="top-bar-perfil">Mi perfil</a>
+            <form method="post" action="/logout" class="nav-logout-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn-logout">Cerrar sesión</button>
+            </form>
+        </div>
+    </header>
 
+    <!-- Barra de navegación: links + búsqueda -->
+    <nav class="navbar">
         <ul class="nav-links">
             <li><a href="/">Dashboard</a></li>
             <li><a href="/pacientes">Pacientes</a></li>
+            <li><a href="/calendario">Calendario</a></li>
             <li><a href="/pacientes/nuevo">Nuevo paciente</a></li>
+            {% if current_user_is_admin %}
+            <li><a href="/admin/usuarios" class="nav-link-admin">Usuarios</a></li>
+            {% endif %}
         </ul>
 
         <form class="nav-search" method="get" action="/pacientes">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" name="q" placeholder="Buscar paciente, DNI, diagnóstico...">
-        </form>
-
-        <form method="post" action="/logout" class="nav-logout-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn-logout">Cerrar sesión</button>
         </form>
     </nav>
 

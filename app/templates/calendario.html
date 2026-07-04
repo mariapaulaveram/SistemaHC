@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="cal-header">
+    <div class="cal-header-left">
+        <h1>Calendario de controles</h1>
+        {% if total_controles %}
+        <span class="pl-count">{{ total_controles }} control{{ 'es' if total_controles != 1 }}</span>
+        {% endif %}
+    </div>
+    <div class="cal-nav">
+        <a href="/calendario?mes={{ mes_ant }}&anio={{ anio_ant }}" class="cal-nav-btn">‹</a>
+        <span class="cal-nav-titulo">{{ mes_nombre }} {{ anio }}</span>
+        <a href="/calendario?mes={{ mes_sig }}&anio={{ anio_sig }}" class="cal-nav-btn">›</a>
+        <a href="/calendario" class="cal-nav-hoy">Hoy</a>
+    </div>
+</div>
+
+<div class="cal-wrap">
+    <div class="cal-grid">
+        {# Encabezado días #}
+        {% for dia in dias_corto %}
+        <div class="cal-th">{{ dia }}</div>
+        {% endfor %}
+
+        {# Semanas #}
+        {% for semana in semanas %}
+            {% for dia in semana %}
+            {% set es_hoy = (dia == hoy) %}
+            {% set es_mes_actual = (dia.month == mes) %}
+            {% set controles_dia = por_dia.get(dia, []) %}
+            <div class="cal-cell {% if not es_mes_actual %}cal-cell--otro{% endif %} {% if es_hoy %}cal-cell--hoy{% endif %}">
+                <span class="cal-dia-num {% if es_hoy %}cal-dia-num--hoy{% endif %}">{{ dia.day }}</span>
+                {% for control in controles_dia %}
+                <a href="/pacientes/{{ control.paciente_id }}" class="cal-evento" title="{{ control.paciente.nombre }} — {{ control.motivo }}">
+                    <span class="cal-evento-inicial">{{ control.paciente.nombre[0] | upper }}</span>
+                    <span class="cal-evento-nombre">{{ control.paciente.nombre.split()[0] }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+{# Lista lateral del mes #}
+{% if total_controles %}
+<div class="cal-lista-titulo">Controles de {{ mes_nombre }}</div>
+<div class="cal-lista">
+    {% for fecha, controles in por_dia.items() | sort %}
+    <div class="cal-lista-grupo">
+        <div class="cal-lista-fecha">
+            {% set dnum = fecha.day %}
+            {% set dnombre = ["lun","mar","mié","jue","vie","sáb","dom"][fecha.weekday()] %}
+            {{ dnombre }} {{ dnum }}
+        </div>
+        <div class="cal-lista-items">
+            {% for c in controles %}
+            <a href="/pacientes/{{ c.paciente_id }}" class="cal-lista-item">
+                <div class="cal-lista-inicial">{{ c.paciente.nombre[0] | upper }}</div>
+                <div>
+                    <div class="cal-lista-nombre">{{ c.paciente.nombre }}</div>
+                    {% if c.motivo %}<div class="cal-lista-motivo">{{ c.motivo }}</div>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="pl-empty" style="margin-top:16px">
+    <p>No hay controles agendados para {{ mes_nombre }} {{ anio }}.</p>
+</div>
+{% endif %}
+
+{% endblock %}

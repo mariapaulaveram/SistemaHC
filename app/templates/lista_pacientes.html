@@ -6,11 +6,21 @@
 <div class="pl-header">
     <div class="pl-header-left">
         <h1>Pacientes</h1>
-        {% if pacientes %}
-        <span class="pl-count">{{ pacientes | length }} registro{{ 's' if pacientes | length != 1 }}</span>
+        {% if total %}
+        <span class="pl-count">{{ total }} registro{{ 's' if total != 1 }}</span>
         {% endif %}
     </div>
-    <a class="btn-editar" href="/pacientes/nuevo">+ Nuevo paciente</a>
+    <div class="pl-header-actions">
+        <a href="/pacientes/exportar/excel" class="btn-export" title="Exportar Excel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Excel
+        </a>
+        <a href="/pacientes/exportar/csv" class="btn-export" title="Exportar CSV">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            CSV
+        </a>
+        <a class="btn-editar" href="/pacientes/nuevo">+ Nuevo paciente</a>
+    </div>
 </div>
 
 {# ── Buscador + ordenamiento ── #}
@@ -21,14 +31,8 @@
              stroke-linejoin="round" class="pl-search-icon">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input
-            type="search"
-            name="q"
-            placeholder="Nombre, DNI, diagnóstico…"
-            value="{{ search_params.q | default('') }}"
-            autofocus
-            class="pl-search-input"
-        >
+        <input type="search" name="q" placeholder="Nombre, DNI, diagnóstico…"
+               value="{{ search_params.q or '' }}" autofocus class="pl-search-input">
         {% if search_params.q %}
         <a href="/pacientes" class="pl-search-clear" title="Limpiar">✕</a>
         {% endif %}
@@ -53,10 +57,11 @@
     <table class="pl-table">
         <thead>
             <tr>
-                <th>Paciente</th>
+                <th class="pl-th-id">N°</th>
+                <th>Nombre y Apellido</th>
                 <th>DNI</th>
                 <th>Edad</th>
-                <th>Sexo</th>
+                <th>Teléfono</th>
                 <th>Fototipo</th>
                 <th></th>
             </tr>
@@ -64,41 +69,71 @@
         <tbody>
             {% for p in pacientes %}
             <tr class="pl-row" onclick="window.location='/pacientes/{{ p.id }}'">
+                <td class="pl-cell-id">{{ p.id }}</td>
                 <td class="pl-cell-nombre">
-                    <div class="pl-avatar">{{ p.nombre[0] | upper }}</div>
+                    <div class="pl-initial">{{ p.nombre[0] | upper }}</div>
                     <div>
                         <a href="/pacientes/{{ p.id }}" class="pl-nombre-link"
                            onclick="event.stopPropagation()">{{ p.nombre }}</a>
-                        {% if p.telefono %}
-                        <div class="pl-sub">{{ p.telefono }}</div>
+                        {% if p.ocupacion %}
+                        <div class="pl-sub">{{ p.ocupacion }}</div>
                         {% endif %}
                     </div>
                 </td>
                 <td class="pl-cell-muted">{{ p.dni or '—' }}</td>
                 <td class="pl-cell-muted">
-                    {% if p.fecha_nacimiento %}
-                        {{ p.fecha_nacimiento | calcular_edad }} a
+                    {% if p.fecha_nacimiento %}{{ p.fecha_nacimiento | calcular_edad }} años
                     {% else %}—{% endif %}
                 </td>
-                <td class="pl-cell-muted">
-                    {% if p.sexo %}
-                        {{ p.sexo | capitalize }}
-                    {% else %}—{% endif %}
-                </td>
+                <td class="pl-cell-muted">{{ p.telefono or '—' }}</td>
                 <td>
                     {% if p.tipo_piel %}
-                    <span class="pl-fototipo-badge">{{ p.tipo_piel }}</span>
-                    {% else %}—{% endif %}
+                    <span class="pl-fototipo-badge">Fitz. {{ p.tipo_piel }}</span>
+                    {% else %}<span class="pl-cell-muted">—</span>{% endif %}
                 </td>
                 <td class="pl-cell-actions" onclick="event.stopPropagation()">
-                    <a href="/pacientes/{{ p.id }}" class="pl-btn-ver">Ver</a>
-                    <a href="/pacientes/{{ p.id }}/editar" class="pl-btn-edit">Editar</a>
+                    <a href="/pacientes/{{ p.id }}" class="pl-icon-btn" title="Ver ficha">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </a>
+                    <a href="/pacientes/{{ p.id }}/editar" class="pl-icon-btn" title="Editar">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+{% if total_pages > 1 %}
+{% set q_param = ('&q=' ~ search_params.q) if search_params.q else '' %}
+{% set sort_param = '&sort=' ~ search_params.sort ~ '&order=' ~ search_params.order %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/pacientes?page={{ page - 1 }}{{ q_param }}{{ sort_param }}" class="pag-btn">← Anterior</a>
+    {% else %}
+    <span class="pag-btn pag-btn--disabled">← Anterior</span>
+    {% endif %}
+
+    <div class="pag-pages">
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span class="pag-num pag-num--active">{{ p }}</span>
+            {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+            <a href="/pacientes?page={{ p }}{{ q_param }}{{ sort_param }}" class="pag-num">{{ p }}</a>
+            {% elif p == page - 3 or p == page + 3 %}
+            <span class="pag-ellipsis">…</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if page < total_pages %}
+    <a href="/pacientes?page={{ page + 1 }}{{ q_param }}{{ sort_param }}" class="pag-btn">Siguiente →</a>
+    {% else %}
+    <span class="pag-btn pag-btn--disabled">Siguiente →</span>
+    {% endif %}
+</div>
+{% endif %}
 
 {% else %}
 <div class="pl-empty">

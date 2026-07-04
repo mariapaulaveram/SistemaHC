@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import models, database
 from ..auth import require_login
-from ..utils import set_flash_message
+from ..utils import set_flash_message, check_csrf
 
 router = APIRouter(tags=["imagenes"], dependencies=[Depends(require_login)])
 
@@ -24,10 +24,12 @@ def get_uploads_dir() -> str:
 async def subir_imagen(
     consulta_id: int,
     request: Request,
+    csrf_token: str = Form(default=""),
     descripcion: str | None = Form(None),
     archivo: UploadFile = File(...),
     db: Session = Depends(database.get_db),
 ):
+    check_csrf(csrf_token, request)
     consulta = db.query(models.Consulta).filter(models.Consulta.id == consulta_id).first()
     if not consulta:
         raise HTTPException(status_code=404, detail="Consulta no encontrada")
@@ -69,8 +71,10 @@ async def subir_imagen(
 def eliminar_imagen(
     imagen_id: int,
     request: Request,
+    csrf_token: str = Form(default=""),
     db: Session = Depends(database.get_db),
 ):
+    check_csrf(csrf_token, request)
     imagen = db.query(models.ImagenConsulta).filter(models.ImagenConsulta.id == imagen_id).first()
     if not imagen:
         raise HTTPException(status_code=404, detail="Imagen no encontrada")

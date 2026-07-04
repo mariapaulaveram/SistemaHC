@@ -1,56 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="dash-header">
-    <div>
-        <h1 style="margin-bottom:2px;">Dashboard</h1>
-        <p class="dash-fecha">{{ hoy_str | capitalize }}</p>
+{# ── Hero banner ── #}
+<div class="dash-hero">
+    <div class="dash-hero-left">
+        <p class="dash-hero-pre">{{ hoy_str | capitalize }}</p>
+        <h1 class="dash-hero-title">¡Buen día, <span>{{ usuario_nombre }}</span>!</h1>
+        <div class="dash-hero-kpis">
+            <div class="dash-kpi">
+                <span class="dash-kpi-value">{{ total_pacientes }}</span>
+                <span class="dash-kpi-label">Pacientes</span>
+            </div>
+            <div class="dash-kpi-sep"></div>
+            <div class="dash-kpi">
+                <span class="dash-kpi-value">{{ consultas_este_mes }}</span>
+                <span class="dash-kpi-label">Consultas este mes</span>
+            </div>
+            {% if controles_vencidos %}
+            <div class="dash-kpi-sep"></div>
+            <div class="dash-kpi dash-kpi--alert">
+                <span class="dash-kpi-value">{{ controles_vencidos | length }}</span>
+                <span class="dash-kpi-label">Vencido{{ 's' if controles_vencidos | length != 1 }}</span>
+            </div>
+            {% endif %}
+            {% if controles_proximos %}
+            <div class="dash-kpi-sep"></div>
+            <div class="dash-kpi dash-kpi--warn">
+                <span class="dash-kpi-value">{{ controles_proximos | length }}</span>
+                <span class="dash-kpi-label">Esta semana</span>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    <a href="/pacientes/nuevo" class="btn-editar">+ Nuevo paciente</a>
+    <a href="/pacientes/nuevo" class="dash-hero-cta">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo paciente
+    </a>
 </div>
 
-<div class="dash-stats-bar">
-    <div class="stat-pill">
-        <span class="stat-pill-value">{{ total_pacientes }}</span>
-        <span class="stat-pill-label">Pacientes</span>
-    </div>
-    <div class="stat-pill-div"></div>
-    <div class="stat-pill">
-        <span class="stat-pill-value">{{ consultas_este_mes }}</span>
-        <span class="stat-pill-label">Consultas este mes</span>
-    </div>
-    {% if controles_vencidos %}
-    <div class="stat-pill-div"></div>
-    <div class="stat-pill stat-pill--alert">
-        <span class="stat-pill-value">{{ controles_vencidos | length }}</span>
-        <span class="stat-pill-label">Vencido{{ 's' if controles_vencidos | length != 1 }}</span>
-    </div>
-    {% endif %}
-    {% if controles_proximos %}
-    <div class="stat-pill-div"></div>
-    <div class="stat-pill stat-pill--warn">
-        <span class="stat-pill-value">{{ controles_proximos | length }}</span>
-        <span class="stat-pill-label">Esta semana</span>
-    </div>
-    {% endif %}
-</div>
+{# ── Buscador ── #}
+<form method="get" action="/pacientes" class="dash-search">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="dash-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" name="q" placeholder="Buscar paciente por nombre, DNI o diagnóstico…" class="dash-search-input">
+    <button type="submit" class="dash-search-btn">Buscar</button>
+</form>
 
+{# ── Paneles ── #}
 <div class="dash-cols">
 
-    {# ── Columna izquierda: alertas ─────────────────────── #}
+    {# Columna alertas #}
     <div class="dash-col-left">
 
         {% if controles_vencidos %}
         <section class="dash-panel">
-            <h2 class="dash-panel-title dash-panel-title--alert">Controles vencidos</h2>
+            <div class="dash-panel-header">
+                <div class="dash-panel-title-wrap dash-panel-title-wrap--alert">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><rect x="11" y="7" width="2" height="6" rx="1" fill="white"/><rect x="11" y="15" width="2" height="2" rx="1" fill="white"/></svg>
+                    Controles vencidos
+                </div>
+            </div>
             <div class="control-list">
                 {% for consulta in controles_vencidos %}
                 <a href="/pacientes/{{ consulta.paciente_id }}" class="control-item control-item--alert">
-                    <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
-                    <div class="control-item-meta">
-                        {% if consulta.motivo %}<span class="control-motivo">{{ consulta.motivo }}</span>{% endif %}
-                        <span class="badge badge-vencido">{{ consulta.proximo_control.strftime('%d/%m/%Y') }}</span>
+                    <div class="control-item-initial control-item-initial--alert">{{ consulta.paciente.nombre[0] | upper }}</div>
+                    <div class="control-item-body">
+                        <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
+                        {% if consulta.motivo %}<div class="control-item-motivo">{{ consulta.motivo }}</div>{% endif %}
                     </div>
+                    <span class="badge badge-vencido">{{ consulta.proximo_control.strftime('%d/%m') }}</span>
                 </a>
                 {% endfor %}
             </div>
@@ -59,15 +76,21 @@
 
         {% if controles_proximos %}
         <section class="dash-panel">
-            <h2 class="dash-panel-title dash-panel-title--warn">Próximos controles</h2>
+            <div class="dash-panel-header">
+                <div class="dash-panel-title-wrap dash-panel-title-wrap--warn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Próximos controles
+                </div>
+            </div>
             <div class="control-list">
                 {% for consulta in controles_proximos %}
                 <a href="/pacientes/{{ consulta.paciente_id }}" class="control-item control-item--warn">
-                    <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
-                    <div class="control-item-meta">
-                        {% if consulta.motivo %}<span class="control-motivo">{{ consulta.motivo }}</span>{% endif %}
-                        <span class="badge badge-proximo">{{ consulta.proximo_control.strftime('%d/%m/%Y') }}</span>
+                    <div class="control-item-initial control-item-initial--warn">{{ consulta.paciente.nombre[0] | upper }}</div>
+                    <div class="control-item-body">
+                        <div class="control-item-name">{{ consulta.paciente.nombre }}</div>
+                        {% if consulta.motivo %}<div class="control-item-motivo">{{ consulta.motivo }}</div>{% endif %}
                     </div>
+                    <span class="badge badge-proximo">{{ consulta.proximo_control.strftime('%d/%m') }}</span>
                 </a>
                 {% endfor %}
             </div>
@@ -76,17 +99,23 @@
 
         {% if not controles_vencidos and not controles_proximos %}
         <section class="dash-panel dash-panel--ok">
-            <p>Sin controles pendientes esta semana.</p>
+            <div class="dash-ok-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <p>Todo al día. Sin controles pendientes esta semana.</p>
         </section>
         {% endif %}
 
     </div>
 
-    {# ── Columna derecha: últimos pacientes ─────────────── #}
+    {# Columna pacientes recientes #}
     <div class="dash-col-right">
         <section class="dash-panel">
             <div class="dash-panel-header">
-                <h2>Últimos pacientes</h2>
+                <div class="dash-panel-title-wrap">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Últimos pacientes
+                </div>
                 <a href="/pacientes" class="dash-ver-todos">Ver todos →</a>
             </div>
             <div id="lista-pacientes" hx-get="/pacientes/lista?limit=5&recent=true" hx-trigger="load"></div>

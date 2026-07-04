@@ -35,7 +35,7 @@ def login(
             {"error": "Email o contraseña incorrectos.", "next": next},
         )
     response = RedirectResponse(url=next if next.startswith("/") else "/", status_code=303)
-    create_session_cookie(response, usuario.id)
+    create_session_cookie(response, usuario.id, rol=usuario.rol or "medico")
     return response
 
 

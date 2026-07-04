@@ -1,16 +1,20 @@
 import os
+import calendar
 from datetime import date, timedelta
+from collections import defaultdict
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates  # kept for type hints
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from . import models
-from .auth import require_login
+from .auth import require_login, get_current_user_id
 from .database import engine, get_db
-from .routers import pacientes, consultas, imagenes
+from .routers import pacientes, consultas, imagenes, admin, perfil
 from .routers import auth as auth_router
 from .utils import render_template, make_templates
 
@@ -18,6 +22,7 @@ from .utils import render_template, make_templates
 DIAS_ES   = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"]
 MESES_ES  = ["enero","febrero","marzo","abril","mayo","junio",
              "julio","agosto","septiembre","octubre","noviembre","diciembre"]
+DIAS_CORTO = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"]
 
 def fecha_es(d):
     return f"{DIAS_ES[d.weekday()]} {d.day} de {MESES_ES[d.month-1]} de {d.year}"
@@ -35,16 +40,42 @@ app.mount(
 
 UPLOADS_DIR = os.getenv("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))
 os.makedirs(UPLOADS_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+# /uploads protegido — requiere login
+# (ya no se monta como StaticFiles público)
+
+
+@app.get("/uploads/{filename}", dependencies=[Depends(require_login)])
+def servir_upload(filename: str):
+    """Sirve archivos de uploads solo a usuarios autenticados."""
+    # Sanitizar: evitar path traversal
+    filename = os.path.basename(filename)
+    filepath = os.path.join(UPLOADS_DIR, filename)
+    if not os.path.isfile(filepath):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    return FileResponse(filepath)
 
 app.include_router(auth_router.router)
 app.include_router(pacientes.router)
 app.include_router(consultas.router)
 app.include_router(imagenes.router)
+app.include_router(admin.router)
+app.include_router(perfil.router)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse("500.html", {"request": request}, status_code=exc.status_code)
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
 
 
 @app.get("/")
-def home(request: Request, db: Session = Depends(get_db), _: int = Depends(require_login)):
+def home(request: Request, db: Session = Depends(get_db), user_id: int = Depends(require_login)):
     hoy = date.today()
     en_7_dias = hoy + timedelta(days=7)
 
@@ -83,6 +114,9 @@ def home(request: Request, db: Session = Depends(get_db), _: int = Depends(requi
         .all()
     )
 
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == user_id).first()
+    usuario_nombre = (usuario.nombre or usuario.email.split("@")[0]) if usuario else ""
+
     return render_template(
         templates, request, "index.html",
         {
@@ -93,5 +127,67 @@ def home(request: Request, db: Session = Depends(get_db), _: int = Depends(requi
             "controles_vencidos": controles_vencidos,
             "controles_proximos": controles_proximos,
             "pacientes_recientes": pacientes_recientes,
+            "usuario_nombre": usuario_nombre,
+        },
+    )
+
+
+@app.get("/calendario")
+def calendario(
+    request: Request,
+    mes: int | None = None,
+    anio: int | None = None,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_login),
+):
+    hoy = date.today()
+    mes  = mes  or hoy.month
+    anio = anio or hoy.year
+
+    # Navegación mes anterior / siguiente
+    if mes == 1:
+        mes_ant, anio_ant = 12, anio - 1
+    else:
+        mes_ant, anio_ant = mes - 1, anio
+    if mes == 12:
+        mes_sig, anio_sig = 1, anio + 1
+    else:
+        mes_sig, anio_sig = mes + 1, anio
+
+    # Semanas del mes (lunes primero)
+    cal = calendar.Calendar(firstweekday=0)
+    semanas = cal.monthdatescalendar(anio, mes)
+
+    # Controles del mes
+    primer_dia = date(anio, mes, 1)
+    ultimo_dia = date(anio, mes, calendar.monthrange(anio, mes)[1])
+    controles = (
+        db.query(models.Consulta)
+        .filter(
+            models.Consulta.proximo_control >= primer_dia,
+            models.Consulta.proximo_control <= ultimo_dia,
+        )
+        .order_by(models.Consulta.proximo_control)
+        .all()
+    )
+
+    # Índice fecha → lista de controles
+    por_dia = defaultdict(list)
+    for c in controles:
+        por_dia[c.proximo_control].append(c)
+
+    return render_template(
+        templates, request, "calendario.html",
+        {
+            "hoy": hoy,
+            "mes": mes,
+            "anio": anio,
+            "mes_nombre": MESES_ES[mes - 1].capitalize(),
+            "dias_corto": DIAS_CORTO,
+            "semanas": semanas,
+            "por_dia": dict(por_dia),
+            "mes_ant": mes_ant, "anio_ant": anio_ant,
+            "mes_sig": mes_sig, "anio_sig": anio_sig,
+            "total_controles": len(controles),
         },
     )

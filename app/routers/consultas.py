@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates  # kept for type hints
 from sqlalchemy.orm import Session
 from .. import models, schemas, database
-from ..auth import require_login
+from ..auth import require_login, get_current_user_id
 from ..utils import render_template, make_templates, set_flash_message, check_csrf
 
 router = APIRouter(prefix="/consultas", tags=["consultas"], dependencies=[Depends(require_login)])
@@ -110,6 +110,7 @@ async def crear_consulta(
 
     consulta = models.Consulta(
         paciente_id=paciente_id,
+        medico_id=get_current_user_id(request),
         fecha=_parse_date(fecha),
         proximo_control=_parse_date(proximo_control),
         motivo=motivo, duracion=duracion,
@@ -218,4 +219,29 @@ def editar_consulta(
 
     response = RedirectResponse(url=f"/pacientes/{consulta.paciente_id}", status_code=303)
     set_flash_message(response, "Consulta actualizada correctamente.")
+    return response
+
+
+@router.post("/{consulta_id}/eliminar")
+def eliminar_consulta(
+    consulta_id: int,
+    request: Request,
+    csrf_token: str = Form(default=""),
+    db: Session = Depends(database.get_db),
+):
+    check_csrf(csrf_token, request)
+    consulta = db.query(models.Consulta).filter(models.Consulta.id == consulta_id).first()
+    if not consulta:
+        raise HTTPException(status_code=404, detail="Consulta no encontrada")
+    paciente_id = consulta.paciente_id
+    # Eliminar imágenes del disco antes de borrar el registro
+    uploads_dir = os.getenv("UPLOADS_DIR", os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
+    for img in consulta.imagenes:
+        filepath = os.path.join(uploads_dir, img.filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    db.delete(consulta)
+    db.commit()
+    response = RedirectResponse(url=f"/pacientes/{paciente_id}", status_code=303)
+    set_flash_message(response, "Consulta eliminada.")
     return response

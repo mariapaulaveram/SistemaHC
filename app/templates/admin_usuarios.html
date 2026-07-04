@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="pd-topbar">
+    <h1 style="font-size:1.1rem;font-weight:700;margin:0">Administración de usuarios</h1>
+</div>
+
+{% if error %}
+<div class="error-message" style="margin:0 0 16px 0">{{ error }}</div>
+{% endif %}
+
+{# ── Lista de usuarios ── #}
+<div class="card" style="margin-bottom:24px">
+    <div class="pl-header">
+        <div>
+            <h2 class="pl-title">Usuarios registrados</h2>
+            <span class="pl-count">{{ usuarios | length }} usuario{{ 's' if usuarios | length != 1 }}</span>
+        </div>
+    </div>
+    <table class="hc-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Consultas</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td><strong>{{ u.nombre or '—' }}</strong></td>
+                <td class="hc-muted">{{ u.email }}</td>
+                <td>
+                    <span class="admin-rol-badge admin-rol-badge--{{ u.rol or 'medico' }}">
+                        {{ 'Admin' if u.rol == 'admin' else 'Médico' }}
+                    </span>
+                </td>
+                <td class="hc-muted">{{ u.consultas | length }}</td>
+                <td>
+                    <div class="admin-actions">
+                        {# Cambiar rol #}
+                        {% if u.id != current_user_id %}
+                        <form method="post" action="/admin/usuarios/{{ u.id }}/cambiar-rol" style="display:contents">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="rol" value="{{ 'medico' if u.rol == 'admin' else 'admin' }}">
+                            <button type="submit" class="btn-secondary btn-xs">
+                                {{ '↓ Médico' if u.rol == 'admin' else '↑ Admin' }}
+                            </button>
+                        </form>
+                        {# Eliminar #}
+                        <form method="post" action="/admin/usuarios/{{ u.id }}/eliminar" style="display:contents"
+                              onsubmit="return confirm('¿Eliminar a {{ u.nombre or u.email }}? Sus consultas quedarán sin médico asignado.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-eliminar btn-xs">Eliminar</button>
+                        </form>
+                        {% else %}
+                        <span class="hc-muted" style="font-size:12px">(tu cuenta)</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ── Crear nuevo usuario ── #}
+<div class="card">
+    <div class="pl-header">
+        <h2 class="pl-title">Agregar nuevo usuario</h2>
+    </div>
+    <form method="post" action="/admin/usuarios/crear" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="admin-form-grid">
+            <div class="form-group">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" name="nombre" class="form-control" placeholder="Dra. Ana García" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="ana@clinica.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                <input type="password" name="password" class="form-control" placeholder="Mínimo 8 caracteres" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rol</label>
+                <select name="rol" class="form-control">
+                    <option value="medico" selected>Médico</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:16px">
+            <button type="submit" class="btn-editar">Crear usuario</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

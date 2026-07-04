@@ -1,8 +1,12 @@
 from datetime import datetime
 import logging
 
+import csv
+import io
+from datetime import date
+
 from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates  # kept for type hints
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -18,6 +22,8 @@ router = APIRouter(prefix="/pacientes", tags=["pacientes"], dependencies=[Depend
 templates = make_templates(directory=os.path.join(os.path.dirname(__file__), "..", "templates"))
 
 
+PER_PAGE = 20
+
 @router.get("/")
 @router.get("")
 def pagina_pacientes(
@@ -25,6 +31,7 @@ def pagina_pacientes(
     q: str | None = Query(None, title="Buscar"),
     sort: str = Query("nombre", pattern="^(nombre|dni|fecha_nacimiento)$"),
     order: str = Query("asc", pattern="^(asc|desc)$"),
+    page: int = Query(1, ge=1),
     db: Session = Depends(database.get_db),
 ):
     query = db.query(models.Paciente).distinct()
@@ -53,11 +60,24 @@ def pagina_pacientes(
 
     order_col = getattr(models.Paciente, sort)
     order_col = desc(order_col) if order == "desc" else asc(order_col)
-    pacientes = query.order_by(order_col).all()
+    query = query.order_by(order_col)
+
+    total = query.count()
+    import math
+    total_pages = max(1, math.ceil(total / PER_PAGE))
+    page = min(page, total_pages)
+    pacientes = query.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
 
     return render_template(
         templates, request, "lista_pacientes.html",
-        {"pacientes": pacientes, "search_params": {"q": q, "sort": sort, "order": order}},
+        {
+            "pacientes": pacientes,
+            "search_params": {"q": q, "sort": sort, "order": order},
+            "page": page,
+            "total_pages": total_pages,
+            "total": total,
+            "per_page": PER_PAGE,
+        },
     )
 
 
@@ -80,6 +100,88 @@ def listar_pacientes_web(
         request=request,
         name="lista_pacientes_items.html",
         context={"pacientes": pacientes},
+    )
+
+
+def _edad(fecha_nac):
+    if not fecha_nac:
+        return ""
+    hoy = date.today()
+    return hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
+
+def _pacientes_ordenados(db):
+    return db.query(models.Paciente).order_by(models.Paciente.nombre).all()
+
+COLUMNAS = ["N°", "Nombre", "DNI", "Fecha nacimiento", "Edad", "Sexo",
+            "Ocupación", "Teléfono", "Tipo de piel", "Alergias",
+            "Medicaciones actuales", "Antecedentes"]
+
+def _fila(p):
+    return [
+        p.id, p.nombre, p.dni or "",
+        p.fecha_nacimiento.strftime("%d/%m/%Y") if p.fecha_nacimiento else "",
+        _edad(p.fecha_nacimiento),
+        p.sexo or "", p.ocupacion or "", p.telefono or "",
+        p.tipo_piel or "", p.alergias or "",
+        p.medicaciones_actuales or "", p.antecedentes or "",
+    ]
+
+
+@router.get("/exportar/csv")
+def exportar_csv(db: Session = Depends(database.get_db)):
+    pacientes = _pacientes_ordenados(db)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(COLUMNAS)
+    for p in pacientes:
+        writer.writerow(_fila(p))
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=pacientes.csv"},
+    )
+
+
+@router.get("/exportar/excel")
+def exportar_excel(db: Session = Depends(database.get_db)):
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    pacientes = _pacientes_ordenados(db)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Pacientes"
+
+    # Encabezado
+    header_fill = PatternFill("solid", fgColor="0077A8")
+    header_font = Font(bold=True, color="FFFFFF")
+    for col, titulo in enumerate(COLUMNAS, 1):
+        cell = ws.cell(row=1, column=col, value=titulo)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+
+    # Datos
+    for row_idx, p in enumerate(pacientes, 2):
+        for col_idx, val in enumerate(_fila(p), 1):
+            ws.cell(row=row_idx, column=col_idx, value=val)
+        if row_idx % 2 == 0:
+            for col_idx in range(1, len(COLUMNAS) + 1):
+                ws.cell(row=row_idx, column=col_idx).fill = PatternFill("solid", fgColor="F0F4F8")
+
+    # Ancho de columnas
+    anchos = [6, 30, 14, 16, 6, 10, 20, 14, 12, 25, 25, 30]
+    for col, ancho in enumerate(anchos, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = ancho
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.read()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=pacientes.xlsx"},
     )
 
 
@@ -223,6 +325,25 @@ def imprimir_paciente(request: Request, paciente_id: int, db: Session = Depends(
         "consultas": consultas,
         "fecha_hoy": date.today().strftime("%d/%m/%Y"),
     })
+
+
+@router.post("/{paciente_id}/eliminar")
+def eliminar_paciente(
+    request: Request,
+    paciente_id: int,
+    csrf_token: str = Form(default=""),
+    db: Session = Depends(database.get_db),
+):
+    check_csrf(csrf_token, request)
+    paciente = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    nombre = paciente.nombre
+    db.delete(paciente)
+    db.commit()
+    response = RedirectResponse(url="/pacientes", status_code=303)
+    set_flash_message(response, f"Paciente {nombre} eliminado.")
+    return response
 
 
 @router.post("/api", response_model=schemas.Paciente)

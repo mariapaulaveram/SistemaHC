@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="pd-topbar">
+    <h1 style="font-size:1.1rem;font-weight:700;margin:0">Mi perfil</h1>
+</div>
+
+{% set ok = request.query_params.get('ok') %}
+{% if ok == 'nombre' %}
+<div class="flash-success">Nombre actualizado correctamente.</div>
+{% elif ok == 'password' %}
+<div class="flash-success">Contraseña cambiada correctamente.</div>
+{% endif %}
+
+<div class="perfil-grid">
+
+    {# ── Datos personales ── #}
+    <div class="card">
+        <div class="pl-header">
+            <h2 class="pl-title">Datos personales</h2>
+        </div>
+
+        <div class="perfil-info">
+            <div class="perfil-avatar">{{ (usuario.nombre or usuario.email)[0] | upper }}</div>
+            <div>
+                <div class="perfil-nombre">{{ usuario.nombre or '—' }}</div>
+                <div class="perfil-email">{{ usuario.email }}</div>
+                <span class="admin-rol-badge admin-rol-badge--{{ usuario.rol or 'medico' }}">
+                    {{ 'Administrador' if usuario.rol == 'admin' else 'Médico' }}
+                </span>
+            </div>
+        </div>
+
+        <form method="post" action="/perfil/nombre" class="perfil-form" style="margin-top:20px">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" name="nombre" class="form-control"
+                       value="{{ usuario.nombre or '' }}" placeholder="Tu nombre completo" required>
+            </div>
+            <div style="margin-top:12px">
+                <button type="submit" class="btn-editar">Guardar nombre</button>
+            </div>
+        </form>
+    </div>
+
+    {# ── Cambiar contraseña ── #}
+    <div class="card">
+        <div class="pl-header">
+            <h2 class="pl-title">Cambiar contraseña</h2>
+        </div>
+
+        {% if error_password %}
+        <div class="error-message" style="margin-bottom:14px">{{ error_password }}</div>
+        {% endif %}
+
+        <form method="post" action="/perfil/password" class="perfil-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+                <label class="form-label">Contraseña actual</label>
+                <input type="password" name="password_actual" class="form-control"
+                       placeholder="Tu contraseña actual" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nueva contraseña</label>
+                <input type="password" name="password_nuevo" class="form-control"
+                       placeholder="Mínimo 8 caracteres" minlength="8" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmar nueva contraseña</label>
+                <input type="password" name="password_confirmar" class="form-control"
+                       placeholder="Repetí la nueva contraseña" required>
+            </div>
+            <div style="margin-top:12px">
+                <button type="submit" class="btn-editar">Cambiar contraseña</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

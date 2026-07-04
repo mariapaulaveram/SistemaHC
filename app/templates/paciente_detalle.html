@@ -1,47 +1,217 @@
 {% extends "base.html" %}
 {% block content %}
-    {% set form_data = form_data | default({}) %}
-    <div class="detalle-header">
-        <a href="/pacientes">← Volver a Pacientes</a>
-        <div class="detalle-actions">
-            <a href="/pacientes/{{ paciente.id }}/imprimir" class="btn-secondary" target="_blank">🖨 Imprimir HC</a>
-            <a href="/pacientes/{{ paciente.id }}/editar" class="btn-editar">Editar paciente</a>
+{% set form_data = form_data | default({}) %}
+{% set fd = form_data | default({}) %}
+
+{# ── Hero del paciente ── #}
+<div class="pd-topbar">
+    <a href="/pacientes" class="pd-back">← Pacientes</a>
+    <div class="pd-actions">
+        <a href="/pacientes/{{ paciente.id }}/imprimir" class="btn-secondary" target="_blank">🖨 Imprimir HC</a>
+        <a href="/pacientes/{{ paciente.id }}/editar" class="btn-editar">Editar</a>
+        <form method="post" action="/pacientes/{{ paciente.id }}/eliminar" style="display:contents"
+              onsubmit="return confirm('¿Eliminar a {{ paciente.nombre }}? Se borrarán todas sus consultas e imágenes. Esta acción no se puede deshacer.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-eliminar">Eliminar</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+    <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<div class="pd-hero">
+    <div class="pd-hero-avatar">{{ paciente.nombre[0] | upper }}</div>
+    <div class="pd-hero-info">
+        <h1 class="pd-hero-name">{{ paciente.nombre }}</h1>
+        <div class="pd-hero-chips">
+            {% if paciente.dni %}<span class="pd-chip">DNI {{ paciente.dni }}</span>{% endif %}
+            {% if paciente.fecha_nacimiento %}
+                <span class="pd-chip">{{ paciente.fecha_nacimiento | calcular_edad }} años</span>
+            {% endif %}
+            {% if paciente.sexo %}<span class="pd-chip">{{ paciente.sexo | capitalize }}</span>{% endif %}
+            {% if paciente.telefono %}<span class="pd-chip">📞 {{ paciente.telefono }}</span>{% endif %}
+            {% if paciente.tipo_piel %}<span class="pd-chip pd-chip-skin">Fitzpatrick {{ paciente.tipo_piel }}</span>{% endif %}
         </div>
     </div>
-    <h1>Ficha Clínica: {{ paciente.nombre }}</h1>
-    {% if error %}
-        <div class="error-message">{{ error }}</div>
-    {% endif %}
+</div>
 
-    <section class="datos-personales">
-        <h2>Datos Personales</h2>
-        <p><strong>DNI:</strong> {{ paciente.dni }}</p>
-        <p><strong>Fecha de Nacimiento:</strong>
-            {{ paciente.fecha_nacimiento or 'No informada' }}
-            {% if paciente.fecha_nacimiento %}
-                <span class="badge badge-muted">{{ paciente.fecha_nacimiento | calcular_edad }} años</span>
+{# ── Datos clínicos en grid de 2 columnas ── #}
+<div class="pd-cards-grid">
+    <div class="pd-card">
+        <div class="pd-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Datos Personales
+        </div>
+        <div class="pd-icon-fields">
+            <div class="pd-icon-field">
+                <span class="pd-icon-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+                </span>
+                <div>
+                    <span class="pd-icon-label">DNI</span>
+                    <span class="pd-icon-value">{{ paciente.dni or '—' }}</span>
+                </div>
+            </div>
+            <div class="pd-icon-field">
+                <span class="pd-icon-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <div>
+                    <span class="pd-icon-label">Nacimiento</span>
+                    <span class="pd-icon-value">
+                        {{ paciente.fecha_nacimiento or '—' }}
+                        {% if paciente.fecha_nacimiento %}
+                            <span class="badge badge-muted">{{ paciente.fecha_nacimiento | calcular_edad }} años</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="pd-icon-field">
+                <span class="pd-icon-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <div>
+                    <span class="pd-icon-label">Sexo</span>
+                    <span class="pd-icon-value">{{ paciente.sexo | capitalize if paciente.sexo else '—' }}</span>
+                </div>
+            </div>
+            <div class="pd-icon-field">
+                <span class="pd-icon-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <div>
+                    <span class="pd-icon-label">Teléfono</span>
+                    <span class="pd-icon-value">{{ paciente.telefono or '—' }}</span>
+                </div>
+            </div>
+            <div class="pd-icon-field">
+                <span class="pd-icon-wrap">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                </span>
+                <div>
+                    <span class="pd-icon-label">Ocupación</span>
+                    <span class="pd-icon-value">{{ paciente.ocupacion or '—' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pd-card">
+        <div class="pd-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Datos Dermatológicos
+        </div>
+        <div class="pd-fields">
+            <div class="pd-field">
+                <span class="pd-label">Fototipo</span>
+                <span class="pd-value">{{ ('Fitzpatrick ' + paciente.tipo_piel) if paciente.tipo_piel else '—' }}</span>
+            </div>
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Alergias</span>
+                <span class="pd-value">{{ paciente.alergias or 'No reportadas' }}</span>
+            </div>
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Medicación concomitante</span>
+                <span class="pd-value">{{ paciente.medicaciones_actuales or 'Ninguna reportada' }}</span>
+            </div>
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Antecedentes</span>
+                <span class="pd-value">{{ paciente.antecedentes or 'No reportados' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Historial de Consultas ── #}
+<section class="pd-section">
+    <div class="pd-section-header">
+        <h2 class="pd-section-title">
+            Historial de Consultas
+            {% if consultas %}
+                <span class="pd-count-badge">{{ consultas | length }}</span>
             {% endif %}
-        </p>
-        {% if paciente.sexo %}<p><strong>Sexo:</strong> {{ paciente.sexo | capitalize }}</p>{% endif %}
-        <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No informado' }}</p>
-        {% if paciente.ocupacion %}<p><strong>Ocupación:</strong> {{ paciente.ocupacion }}</p>{% endif %}
-    </section>
+        </h2>
+    </div>
 
-    <section class="datos-dermatologicos">
-        <h2>Datos Dermatológicos</h2>
-        <p><strong>Fototipo:</strong> {{ ('Fitzpatrick ' + paciente.tipo_piel) if paciente.tipo_piel else 'No informado' }}</p>
-        <p><strong>Alergias:</strong> {{ paciente.alergias or 'No reportadas' }}</p>
-        <p><strong>Medicación concomitante:</strong> {{ paciente.medicaciones_actuales or 'Ninguna reportada' }}</p>
-        <p><strong>Antecedentes:</strong> {{ paciente.antecedentes or 'No reportados' }}</p>
-    </section>
+    {% if consultas %}
+        <div class="hc-table-wrap">
+            <table class="hc-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Motivo</th>
+                        <th>Diagnóstico</th>
+                        <th>Zona</th>
+                        <th>Severidad</th>
+                        <th>Próximo control</th>
+                        <th>Fotos</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consulta in consultas %}
+                    <tr class="hc-row">
+                        <td class="hc-fecha">{{ consulta.fecha }}</td>
+                        <td class="hc-motivo">{{ consulta.motivo }}</td>
+                        <td class="hc-dx">{{ consulta.diagnostico or '—' }}</td>
+                        <td class="hc-muted">{{ consulta.zona_afectada or '—' }}</td>
+                        <td>
+                            {% if consulta.severidad %}
+                                <span class="cc-badge cc-badge-{{ consulta.severidad }}">{{ consulta.severidad | capitalize }}</span>
+                            {% else %}
+                                <span class="hc-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if consulta.proximo_control %}
+                                {% set estado = consulta.proximo_control | estado_control %}
+                                <span class="badge badge-{{ estado }}">{{ consulta.proximo_control }}</span>
+                            {% else %}
+                                <span class="hc-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="hc-fotos">
+                            {% if consulta.imagenes %}
+                                <a href="/consultas/{{ consulta.id }}" class="cc-thumb-wrap">
+                                    <img class="cc-thumb" src="/uploads/{{ consulta.imagenes[0].filename }}" alt="foto">
+                                    {% if consulta.imagenes | length > 1 %}
+                                        <span class="cc-thumb-count">+{{ consulta.imagenes | length - 1 }}</span>
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <span class="hc-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="hc-actions">
+                            <a href="/consultas/{{ consulta.id }}" class="pl-btn-ver">Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="pd-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <p>No hay consultas registradas aún.</p>
+        </div>
+    {% endif %}
+</section>
 
-    <section class="consulta-form">
-        <h2>Nueva Consulta</h2>
-        {% set fd = form_data | default({}) %}
+{# ── Nueva Consulta (colapsable) ── #}
+<section class="pd-section">
+    <details class="nueva-consulta-details">
+        <summary class="nueva-consulta-summary">
+            <span class="nueva-consulta-icon">+</span>
+            Nueva Consulta
+        </summary>
+
+        <div class="nueva-consulta-body">
         <form method="post" action="/consultas/pacientes/{{ paciente.id }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-            {# 1. Datos de la consulta #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">1 · Datos de la consulta</p>
                 <div class="form-seccion-body">
@@ -63,7 +233,6 @@
                 </div>
             </div>
 
-            {# 2. Anamnesis #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">2 · Anamnesis</p>
                 <div class="form-seccion-body">
@@ -97,7 +266,6 @@
                 </div>
             </div>
 
-            {# 3. Examen dermatológico #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">3 · Examen dermatológico</p>
                 <div class="form-seccion-body">
@@ -148,7 +316,6 @@
                 </div>
             </div>
 
-            {# 4. Diagnóstico #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">4 · Diagnóstico</p>
                 <div class="form-seccion-body">
@@ -167,7 +334,6 @@
                 </div>
             </div>
 
-            {# 5. Plan terapéutico #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">5 · Plan terapéutico</p>
                 <div class="form-seccion-body">
@@ -196,7 +362,6 @@
                 </div>
             </div>
 
-            {# 6. Notas internas #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">6 · Notas internas</p>
                 <div class="form-seccion-body">
@@ -208,7 +373,6 @@
                 </div>
             </div>
 
-            {# 7. Fotos #}
             <div class="form-seccion">
                 <p class="form-seccion-titulo">7 · Registro fotográfico</p>
                 <div class="form-seccion-body">
@@ -225,85 +389,8 @@
                 <a href="/pacientes/{{ paciente.id }}" class="btn-secondary">Cancelar</a>
             </div>
         </form>
-    </section>
+        </div>
+    </details>
+</section>
 
-    <section class="historial-consultas">
-        <h2>Historial de Consultas</h2>
-        {% if consultas %}
-            <table class="consultas-table">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Motivo</th>
-                        <th>Zona</th>
-                        <th>Diagnóstico</th>
-                        <th>Severidad</th>
-                        <th>Evolución</th>
-                        <th>Control</th>
-                        <th>Fotos</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for consulta in consultas %}
-                    <tr>
-                        <td>{{ consulta.fecha }}</td>
-                        <td>{{ consulta.motivo }}</td>
-                        <td>{{ consulta.zona_afectada or '-' }}</td>
-                        <td><strong>{{ consulta.diagnostico or '-' }}</strong></td>
-                        <td>{{ consulta.severidad or '-' }}</td>
-                        <td>{{ consulta.evolucion or '-' }}</td>
-                        <td>
-                            {% if consulta.proximo_control %}
-                                {% set estado = consulta.proximo_control | estado_control %}
-                                <span class="badge badge-{{ estado }}">{{ consulta.proximo_control }}</span>
-                            {% else %}
-                                <span class="badge badge-muted">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="fotos-thumb-cell">
-                            {% for img in consulta.imagenes[:3] %}
-                                <a href="/consultas/{{ consulta.id }}" title="{{ img.descripcion or '' }}">
-                                    <img class="foto-thumb" src="/uploads/{{ img.filename }}" alt="foto">
-                                </a>
-                            {% endfor %}
-                            {% if consulta.imagenes | length > 3 %}
-                                <a href="/consultas/{{ consulta.id }}" class="fotos-mas">+{{ consulta.imagenes | length - 3 }}</a>
-                            {% endif %}
-                        </td>
-                        <td class="td-actions">
-                            <a href="/consultas/{{ consulta.id }}" class="pl-btn-ver">Ver</a>
-                            <a href="/consultas/{{ consulta.id }}/editar" class="pl-btn-edit">Editar</a>
-                        </td>
-                    </tr>
-                    <tr class="consulta-detalle-row">
-                        <td colspan="9">
-                            <details>
-                                <summary>Ver detalles</summary>
-                                <div class="consulta-detalle">
-                                    <p><strong>Lesión primaria:</strong> {{ consulta.tipo_lesion or '-' }}</p>
-                                    <p><strong>Lesión secundaria:</strong> {{ consulta.lesion_secundaria or '-' }}</p>
-                                    <p><strong>Síntomas:</strong> {{ consulta.sintomas or '-' }}</p>
-                                    <p><strong>Factores desencadenantes:</strong> {{ consulta.factores_desencadenantes or '-' }}</p>
-                                    <p><strong>Duración:</strong> {{ consulta.duracion or '-' }}</p>
-                                    <p><strong>Diagnóstico diferencial:</strong> {{ consulta.diagnostico_diferencial or '-' }}</p>
-                                    <p><strong>Estudios solicitados:</strong> {{ consulta.estudios_solicitados or '-' }}</p>
-                                    <p><strong>Observaciones:</strong> {{ consulta.observaciones_clinicas or 'No hay' }}</p>
-                                    <p><strong>Tratamiento:</strong> {{ consulta.tratamiento or 'No hay' }}</p>
-                                    <p><strong>Recomendaciones:</strong> {{ consulta.recomendaciones or 'No hay' }}</p>
-                                    <p><strong>Notas:</strong> {{ consulta.notas or 'No hay' }}</p>
-                                    {% if consulta.proximo_control %}
-                                    <p><strong>Próximo control:</strong> {{ consulta.proximo_control }}</p>
-                                    {% endif %}
-                                </div>
-                            </details>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No hay consultas registradas para este paciente.</p>
-        {% endif %}
-    </section>
 {% endblock %}

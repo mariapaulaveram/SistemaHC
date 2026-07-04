@@ -26,6 +26,7 @@ class Consulta(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
+    medico_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     fecha = Column(Date, nullable=False, index=True)
     proximo_control = Column(Date, nullable=True)
 
@@ -58,15 +59,20 @@ class Consulta(Base):
     notas = Column(Text, nullable=True)
 
     paciente = relationship("Paciente", back_populates="consultas")
+    medico   = relationship("Usuario", back_populates="consultas")
     imagenes = relationship("ImagenConsulta", back_populates="consulta", cascade="all, delete-orphan")
 
 
 class Usuario(Base):
     __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    id             = Column(Integer, primary_key=True, index=True)
+    nombre         = Column(String, nullable=True)
+    email          = Column(String, unique=True, index=True, nullable=False)
+    hashed_password= Column(String, nullable=False)
+    rol            = Column(String, nullable=False, default="medico")  # "admin" | "medico"
+
+    consultas = relationship("Consulta", back_populates="medico")
 
 
 class ImagenConsulta(Base):

@@ -1,13 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-    <a href="/pacientes/{{ paciente.id }}">← Volver a la ficha</a>
-    <h1>Editar Paciente</h1>
 
-    {% if error %}
-        <div class="error-message">{{ error }}</div>
-    {% endif %}
+<div class="pd-topbar">
+    <a href="/pacientes/{{ paciente.id }}" class="pd-back">← Volver a la ficha</a>
+</div>
 
-    <form method="post" action="/pacientes/{{ paciente.id }}/editar">
+<div class="pd-hero" style="margin-bottom: 24px;">
+    <div class="pd-hero-avatar">{{ paciente.nombre[0] | upper }}</div>
+    <div class="pd-hero-info">
+        <h1 class="pd-hero-name">Editar — {{ paciente.nombre }}</h1>
+        <div class="pd-hero-chips">
+            {% if paciente.dni %}<span class="pd-chip">DNI {{ paciente.dni }}</span>{% endif %}
+            {% if paciente.fecha_nacimiento %}
+                <span class="pd-chip">{{ paciente.fecha_nacimiento | calcular_edad }} años</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if error %}
+    <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" action="/pacientes/{{ paciente.id }}/editar">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         {# 1. Datos personales #}

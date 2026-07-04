@@ -1,112 +1,255 @@
 {% extends "base.html" %}
 {% block content %}
-    <a href="/pacientes/{{ consulta.paciente_id }}">← Volver al paciente</a>
-    <h1>Consulta del {{ consulta.fecha }}</h1>
 
-    <section class="consulta-info">
-        <h2>1 · Datos de la consulta</h2>
-        <p><strong>Motivo:</strong> {{ consulta.motivo }}</p>
-        {% if consulta.proximo_control %}
-        <p><strong>Próximo control:</strong> {{ consulta.proximo_control }}</p>
-        {% endif %}
-    </section>
+{# ── Topbar ── #}
+<div class="pd-topbar">
+    <a href="/pacientes/{{ consulta.paciente_id }}" class="pd-back">← Volver al paciente</a>
+    <div class="pd-actions">
+        <a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar consulta</a>
+        <form method="post" action="/consultas/{{ consulta.id }}/eliminar" style="display:contents"
+              onsubmit="return confirm('¿Eliminar esta consulta? Esta acción no se puede deshacer.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-eliminar">Eliminar</button>
+        </form>
+    </div>
+</div>
 
-    <section class="consulta-info">
-        <h2>2 · Anamnesis</h2>
-        <p><strong>Tiempo de evolución:</strong> {{ consulta.duracion or '-' }}</p>
-        <p><strong>Zona afectada:</strong> {{ consulta.zona_afectada or '-' }}</p>
-        {% if consulta.sintomas %}
-        <p><strong>Síntomas acompañantes:</strong> {{ consulta.sintomas }}</p>
+{# ── Hero de la consulta ── #}
+<div class="cd-hero">
+    <div class="cd-hero-top">
+        <div class="cd-hero-breadcrumb">
+            <a href="/pacientes/{{ consulta.paciente_id }}" class="cd-paciente-link">{{ consulta.paciente.nombre }}</a>
+            <span class="cd-sep">›</span>
+            <span>{{ consulta.fecha }}</span>
+        </div>
+    </div>
+    <h1 class="cd-hero-motivo">{{ consulta.motivo }}</h1>
+    <div class="cd-hero-stats">
+        <div class="cd-stat">
+            <span class="cd-stat-label">Diagnóstico</span>
+            <span class="cd-stat-value {% if consulta.diagnostico %}cd-stat-dx{% endif %}">{{ consulta.diagnostico or '—' }}</span>
+        </div>
+        <div class="cd-stat">
+            <span class="cd-stat-label">Zona afectada</span>
+            <span class="cd-stat-value">{{ consulta.zona_afectada or '—' }}</span>
+        </div>
+        <div class="cd-stat">
+            <span class="cd-stat-label">Severidad</span>
+            <span class="cd-stat-value">
+                {% if consulta.severidad %}
+                    <span class="cc-badge cc-badge-{{ consulta.severidad }}">{{ consulta.severidad | capitalize }}</span>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="cd-stat">
+            <span class="cd-stat-label">Evolución</span>
+            <span class="cd-stat-value">{{ consulta.evolucion | capitalize if consulta.evolucion else '—' }}</span>
+        </div>
+        {% if consulta.medico %}
+        <div class="cd-stat">
+            <span class="cd-stat-label">Médico</span>
+            <span class="cd-stat-value">{{ consulta.medico.nombre or consulta.medico.email }}</span>
+        </div>
         {% endif %}
-        {% if consulta.factores_desencadenantes %}
-        <p><strong>Factores desencadenantes:</strong> {{ consulta.factores_desencadenantes }}</p>
-        {% endif %}
-        {% if consulta.tratamientos_previos %}
-        <p><strong>Tratamientos previos:</strong> {{ consulta.tratamientos_previos }}</p>
-        {% endif %}
-    </section>
+        <div class="cd-stat">
+            <span class="cd-stat-label">Próximo control</span>
+            <span class="cd-stat-value">
+                {% if consulta.proximo_control %}
+                    {% set estado = consulta.proximo_control | estado_control %}
+                    <span class="badge badge-{{ estado }}">{{ consulta.proximo_control }}</span>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+    </div>
+</div>
 
-    <section class="consulta-info">
-        <h2>3 · Examen dermatológico</h2>
-        <p><strong>Lesión primaria:</strong> {{ consulta.tipo_lesion or '-' }}</p>
-        {% if consulta.lesion_secundaria %}
-        <p><strong>Lesión secundaria:</strong> {{ consulta.lesion_secundaria }}</p>
-        {% endif %}
-        <p><strong>Severidad:</strong> {{ consulta.severidad or '-' }}</p>
-        <p><strong>Evolución:</strong> {{ consulta.evolucion or '-' }}</p>
-        {% if consulta.observaciones_clinicas %}
-        <p><strong>Observaciones:</strong> {{ consulta.observaciones_clinicas }}</p>
-        {% endif %}
-    </section>
+{# ── Secciones clínicas ── #}
+<div class="cd-grid">
 
-    <section class="consulta-info">
-        <h2>4 · Diagnóstico</h2>
-        <p><strong>Diagnóstico principal:</strong> {{ consulta.diagnostico or 'No informado' }}</p>
-        {% if consulta.diagnostico_diferencial %}
-        <p><strong>Diagnóstico diferencial:</strong> {{ consulta.diagnostico_diferencial }}</p>
-        {% endif %}
-    </section>
+    {# 1 + 2 — Datos y Anamnesis #}
+    <div class="cd-card">
+        <div class="cd-card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Anamnesis
+        </div>
+        <div class="pd-fields">
+            <div class="pd-field">
+                <span class="pd-label">Tiempo de evolución</span>
+                <span class="pd-value">{{ consulta.duracion or '—' }}</span>
+            </div>
+            <div class="pd-field">
+                <span class="pd-label">Zona afectada</span>
+                <span class="pd-value">{{ consulta.zona_afectada or '—' }}</span>
+            </div>
+            {% if consulta.sintomas %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Síntomas acompañantes</span>
+                <span class="pd-value">{{ consulta.sintomas }}</span>
+            </div>
+            {% endif %}
+            {% if consulta.factores_desencadenantes %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Factores desencadenantes</span>
+                <span class="pd-value">{{ consulta.factores_desencadenantes }}</span>
+            </div>
+            {% endif %}
+            {% if consulta.tratamientos_previos %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Tratamientos previos</span>
+                <span class="pd-value">{{ consulta.tratamientos_previos }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-    <section class="consulta-info">
-        <h2>5 · Plan terapéutico</h2>
-        {% if consulta.estudios_solicitados %}
-        <p><strong>Estudios solicitados:</strong> {{ consulta.estudios_solicitados }}</p>
-        {% endif %}
-        {% if consulta.procedimientos %}
-        <p><strong>Procedimientos:</strong> {{ consulta.procedimientos }}</p>
-        {% endif %}
-        <p><strong>Tratamiento:</strong> {{ consulta.tratamiento or 'No informado' }}</p>
-        {% if consulta.recomendaciones %}
-        <p><strong>Recomendaciones:</strong> {{ consulta.recomendaciones }}</p>
-        {% endif %}
-    </section>
+    {# 3 — Examen dermatológico #}
+    <div class="cd-card">
+        <div class="cd-card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Examen Dermatológico
+        </div>
+        <div class="pd-fields">
+            <div class="pd-field">
+                <span class="pd-label">Lesión primaria</span>
+                <span class="pd-value">{{ consulta.tipo_lesion | capitalize if consulta.tipo_lesion else '—' }}</span>
+            </div>
+            <div class="pd-field">
+                <span class="pd-label">Lesión secundaria</span>
+                <span class="pd-value">{{ consulta.lesion_secundaria | capitalize if consulta.lesion_secundaria else '—' }}</span>
+            </div>
+            <div class="pd-field">
+                <span class="pd-label">Severidad</span>
+                <span class="pd-value">{{ consulta.severidad | capitalize if consulta.severidad else '—' }}</span>
+            </div>
+            <div class="pd-field">
+                <span class="pd-label">Evolución</span>
+                <span class="pd-value">{{ consulta.evolucion | capitalize if consulta.evolucion else '—' }}</span>
+            </div>
+            {% if consulta.observaciones_clinicas %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Observaciones del examen físico</span>
+                <span class="pd-value">{{ consulta.observaciones_clinicas }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# 4 — Diagnóstico #}
+    <div class="cd-card">
+        <div class="cd-card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Diagnóstico
+        </div>
+        <div class="pd-fields">
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Diagnóstico principal</span>
+                <span class="pd-value cd-dx-principal">{{ consulta.diagnostico or '—' }}</span>
+            </div>
+            {% if consulta.diagnostico_diferencial %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Diagnóstico diferencial</span>
+                <span class="pd-value">{{ consulta.diagnostico_diferencial }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# 5 — Plan terapéutico #}
+    <div class="cd-card">
+        <div class="cd-card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Plan Terapéutico
+        </div>
+        <div class="pd-fields">
+            {% if consulta.estudios_solicitados %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Estudios solicitados</span>
+                <span class="pd-value">{{ consulta.estudios_solicitados }}</span>
+            </div>
+            {% endif %}
+            {% if consulta.procedimientos %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Procedimientos realizados</span>
+                <span class="pd-value">{{ consulta.procedimientos }}</span>
+            </div>
+            {% endif %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Tratamiento indicado</span>
+                <span class="pd-value">{{ consulta.tratamiento or '—' }}</span>
+            </div>
+            {% if consulta.recomendaciones %}
+            <div class="pd-field pd-field-full">
+                <span class="pd-label">Recomendaciones al paciente</span>
+                <span class="pd-value">{{ consulta.recomendaciones }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
     {% if consulta.notas %}
-    <section class="consulta-info">
-        <h2>6 · Notas internas</h2>
-        <p>{{ consulta.notas }}</p>
-    </section>
+    {# 6 — Notas internas #}
+    <div class="cd-card cd-card-notas">
+        <div class="cd-card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Notas internas
+        </div>
+        <div class="pd-fields">
+            <div class="pd-field pd-field-full">
+                <span class="pd-value">{{ consulta.notas }}</span>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
-    {# ── Registro fotográfico ─────────────────────────────────────────────── #}
-    <section class="fotos-section">
-        <h2>7 · Registro Fotográfico</h2>
+</div>
 
+{# ── Registro fotográfico ── #}
+<section class="cd-fotos-section">
+    <h2 class="cd-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Registro Fotográfico
         {% if consulta.imagenes %}
-            <div class="fotos-galeria">
-                {% for img in consulta.imagenes %}
-                <div class="foto-card">
-                    <a href="/uploads/{{ img.filename }}" target="_blank">
-                        <img src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or 'Foto de lesión' }}">
-                    </a>
-                    {% if img.descripcion %}
-                        <p class="foto-descripcion">{{ img.descripcion }}</p>
-                    {% endif %}
-                    <form method="post" action="/imagenes/{{ img.id }}/eliminar"
-                          onsubmit="return confirm('¿Eliminar esta imagen?')">
-                        <button type="submit" class="btn-eliminar-foto">Eliminar</button>
-                    </form>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="muted">No hay fotos registradas para esta consulta.</p>
+            <span class="pd-count-badge">{{ consulta.imagenes | length }}</span>
         {% endif %}
+    </h2>
 
-        <div class="foto-upload">
-            <h3>Agregar foto</h3>
-            <form method="post" action="/consultas/{{ consulta.id }}/imagenes" enctype="multipart/form-data">
-                <div class="foto-upload-fila">
-                    <input type="file" name="archivo" accept=".jpg,.jpeg,.png,.webp" required>
-                    <input type="text" name="descripcion" placeholder="Descripción opcional (ej: lesión en antebrazo izquierdo)">
-                    <button type="submit" class="btn-editar">Subir</button>
+    {% if consulta.imagenes %}
+    <div class="cd-galeria">
+        {% for img in consulta.imagenes %}
+        <div class="cd-foto-card">
+            <a href="/uploads/{{ img.filename }}" target="_blank" class="cd-foto-link">
+                <img class="cd-foto-img" src="/uploads/{{ img.filename }}" alt="{{ img.descripcion or 'Foto de lesión' }}">
+                <div class="cd-foto-overlay">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </div>
-                <p class="foto-hint">JPG, PNG o WebP — máx. 10 MB</p>
+            </a>
+            {% if img.descripcion %}
+            <p class="cd-foto-desc">{{ img.descripcion }}</p>
+            {% endif %}
+            <form method="post" action="/imagenes/{{ img.id }}/eliminar"
+                  onsubmit="return confirm('¿Eliminar esta imagen?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="cd-foto-del">Eliminar</button>
             </form>
         </div>
-    </section>
-
-    <div class="consulta-actions">
-        <a href="/consultas/{{ consulta.id }}/editar" class="btn-editar">Editar consulta</a>
+        {% endfor %}
     </div>
+    {% else %}
+    <p class="cd-fotos-empty">No hay fotos registradas para esta consulta.</p>
+    {% endif %}
+
+    <div class="cd-foto-upload">
+        <p class="cd-upload-label">Agregar foto</p>
+        <form method="post" action="/consultas/{{ consulta.id }}/imagenes" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="cd-upload-row">
+                <input type="file" name="archivo" accept=".jpg,.jpeg,.png,.webp" required>
+                <input type="text" name="descripcion" placeholder="Descripción opcional">
+                <button type="submit" class="btn-editar">Subir</button>
+            </div>
+            <p class="campo-hint">JPG, PNG o WebP — máx. 10 MB</p>
+        </form>
+    </div>
+</section>
+
 {% endblock %}

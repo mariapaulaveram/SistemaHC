@@ -1,188 +1,130 @@
-# Sistema de Historias Clínicas — Plan de trabajo y ayuda memoria
+# HC-System — Sistema de Historias Clínicas
 
-## 1. Objetivo del proyecto
+Sistema web de historias clínicas electrónicas para uso real en consultorio de dermatología. Desarrollado de punta a punta con FastAPI, PostgreSQL y Docker.
 
-Construir un sistema simple de historias clínicas electrónicas para uso real de
-mi hermana (médica), accesible desde internet sin importar en qué consultorio
-o lugar esté atendiendo. Un solo sistema centralizado, no sincronización entre
-sistemas distintos.
+## ¿Qué hace?
 
-**Objetivos en paralelo:**
-- Resolver un problema real: que mi hermana pueda cargar y consultar el
-  historial de sus pacientes desde cualquier lugar.
-- Tener un proyecto propio, real y usado, para mostrar en el CV como mejora /
-  implementación hecha de punta a punta.
+- Alta, búsqueda y gestión de pacientes con datos clínicos dermatológicos
+- Historia clínica completa por paciente: anamnesis, examen dermatológico, diagnóstico y plan terapéutico
+- Registro fotográfico de lesiones por consulta
+- Calendario de próximos controles
+- Exportación a Excel y CSV
+- Impresión de ficha clínica
+- Múltiples usuarios con roles (admin / médico)
+- Dashboard clínico con alertas de controles vencidos y próximos
+- Backups automáticos de la base de datos
 
-## 2. Decisiones de alcance (por qué este proyecto y no otro)
-
-- **No se construye un LIMS de laboratorio** (se descartó Beak LIMS — el repo
-  desapareció, riesgo típico de proyectos de un solo mantenedor).
-- **No se usa un EHR/LIMS maduro ya armado** (Senaite, OpenEMR, GNU Health).
-  Son sólidos para uso real en producción, pero:
-  - Corren en stacks de nicho (Plone/Zope, Tryton, LAMP) alejados de lo que
-    quiero aprender y mostrar (Python moderno).
-  - Instalar uno tal cual no demuestra trabajo de desarrollo propio para CV.
-  - Son mucho más grandes de lo que mi hermana necesita hoy.
-- **Se construye un sistema propio, chico y a medida**, usando esos sistemas
-  maduros solo como referencia de qué campos/flujos tiene una historia clínica
-  real (para no improvisar la estructura de datos).
-
-## 3. Stack elegido y por qué
+## Stack
 
 | Capa | Tecnología | Motivo |
 |---|---|---|
-| Backend | FastAPI (Python) | Stack moderno, mismo lenguaje de punta a punta |
-| Base de datos | PostgreSQL | Estándar real de producción, no un juguete tipo SQLite |
-| ORM | SQLAlchemy | Modelo de datos en código Python, sin SQL a mano |
-| Frontend | Jinja2 + HTMX | Sin proyecto separado, sin build step, sin CORS — mucho menos trabajoso que React + Node |
-| Auth | Sesiones + bcrypt | Login simple, contraseña nunca en texto plano |
-| Infraestructura | Docker + docker-compose | Portable, mostrable en CV, fácil de mover a un servidor real después |
+| Backend | FastAPI (Python) | Moderno, tipado, rápido de desarrollar |
+| Base de datos | PostgreSQL | Estándar de producción |
+| ORM | SQLAlchemy | Modelo de datos en Python, sin SQL a mano |
+| Frontend | Jinja2 + HTMX | Un solo proyecto, sin build step, sin CORS |
+| Auth | Sesiones firmadas + bcrypt + CSRF | Seguridad real sin JWT overhead |
+| Infraestructura | Docker + docker-compose | Portable, reproducible, deployable |
 
-**Por qué no React + Node de nuevo:** evita tener dos proyectos separados
-hablándose entre sí (API + SPA), build steps, manejo de estado en cliente y
-configuración de CORS. Con FastAPI + Jinja2 + HTMX es un solo proyecto: una
-función en Python devuelve HTML, HTMX agrega interactividad sin escribir JS.
-
-## 4. Cosas a tener en cuenta desde el día 1 (no como parche al final)
-
-- Es información de salud de pacientes reales: contraseñas siempre hasheadas,
-  nunca loguear datos de pacientes en texto plano, cuidado con mensajes de
-  error que expongan datos.
-- Pensar en HTTPS desde que se despliegue en un servidor real (no en local).
-- Backups de la base de datos una vez que haya datos reales cargados.
-
-## 5. Estructura del proyecto
+## Estructura del proyecto
 
 ```
 SistemaHC/
 ├── app/
-│   ├── main.py            # FastAPI app + dashboard
-│   ├── models.py          # Paciente, Consulta (SQLAlchemy)
-│   ├── schemas.py         # Esquemas Pydantic (para la API JSON)
-│   ├── database.py        # conexión a Postgres
-│   ├── utils.py           # flash messages, helper de render
+│   ├── main.py              # FastAPI app, dashboard, calendario
+│   ├── models.py            # Paciente, Consulta, Usuario, ImagenConsulta
+│   ├── schemas.py           # Esquemas Pydantic
+│   ├── database.py          # Conexión a PostgreSQL
+│   ├── auth.py              # Sesiones, bcrypt, CSRF, roles
+│   ├── utils.py             # Flash messages, render helper, filtros Jinja2
 │   ├── routers/
-│   │   ├── pacientes.py
-│   │   └── consultas.py
-│   ├── static/css/        # estilos (paleta azul/blanco, sobria)
-│   └── templates/         # HTML con Jinja2 + HTMX
-├── scripts/                # scripts de prueba manual (no entran en la imagen Docker)
-├── docker-compose.yml
+│   │   ├── auth.py          # Login / logout
+│   │   ├── pacientes.py     # CRUD pacientes + exportar Excel/CSV
+│   │   ├── consultas.py     # CRUD consultas + fotos
+│   │   ├── imagenes.py      # Subida y eliminación de fotos
+│   │   ├── admin.py         # Panel de administración de usuarios
+│   │   └── perfil.py        # Cambio de nombre y contraseña
+│   ├── static/css/          # Estilos (responsive, diseño profesional)
+│   └── templates/           # HTML con Jinja2
+│       ├── base.html
+│       ├── index.html           # Dashboard
+│       ├── login.html
+│       ├── lista_pacientes.html
+│       ├── paciente_detalle.html
+│       ├── paciente_editar.html
+│       ├── paciente_imprimir.html
+│       ├── consulta_detalle.html
+│       ├── consulta_editar.html
+│       ├── calendario.html
+│       ├── admin_usuarios.html
+│       └── perfil.html
+├── scripts/
+│   ├── crear_usuario.py     # Crear usuario admin desde CLI
+│   ├── backup.ps1           # Backup automático a Google Drive (Windows)
+│   └── restore.ps1          # Restaurar backup
+├── nginx/
+│   └── nginx.conf           # Reverse proxy + HTTPS para producción
+├── docker-compose.yml       # Desarrollo local
+├── docker-compose.prod.yml  # Producción (incluye Nginx + Certbot)
+├── .env.prod.example        # Template de variables de entorno
+├── DEPLOY.md                # Guía de deploy paso a paso
 ├── Dockerfile
-├── .gitignore
-├── .dockerignore
 └── requirements.txt
 ```
 
-**Nota:** el modelo de `Paciente` se amplió respecto al plan original con campos
-dermatológicos (tipo de piel, alergias, medicaciones actuales), y el de
-`Consulta` con campos clínicos específicos de dermatología (zona afectada,
-tipo de lesión, severidad, evolución). Surgió al construir, tiene sentido
-para el caso de uso real de mi hermana (dermatóloga).
+## Correr en local
 
-## 6. Roadmap por etapas (cada etapa funciona antes de pasar a la siguiente)
+```bash
+git clone <repo> SistemaHC
+cd SistemaHC
+docker compose up -d
+```
 
-### Etapa 0 — Setup base ✅ Completa
-- [x] Dockerfile + docker-compose.yml (app + Postgres)
-- [x] Conexión de FastAPI a Postgres funcionando (`docker compose up`)
-- [x] Volumen persistente de Postgres (los datos sobreviven a recrear contenedores)
+El sistema queda disponible en `http://localhost:8000`.
 
-### Etapa 1 — Pacientes ✅ Completa
-- [x] Modelo de datos: Paciente (nombre, DNI, fecha de nacimiento, contacto,
-  antecedentes + campos dermatológicos: tipo de piel, alergias, medicaciones)
-- [x] Alta de paciente (formulario, página propia `/pacientes/nuevo`)
-- [x] Listado y búsqueda de pacientes (por nombre o DNI exacto, con redirect
-  directo a la ficha si el DNI matchea)
-- [x] Filtros adicionales: por tipo de piel, por presencia de antecedentes
-- [x] Ordenamiento (por nombre, DNI o fecha de nacimiento, asc/desc)
-- [x] Ficha de paciente (vista de detalle)
-- [x] Edición de datos del paciente
+### Crear el primer usuario
 
-### Etapa 2 — Consultas (el historial clínico en sí) ✅ Completa
-- [x] Modelo de datos: Consulta (fecha, motivo, diagnóstico, tratamiento,
-  notas + campos dermatológicos: zona afectada, tipo de lesión, severidad,
-  evolución, observaciones clínicas, recomendaciones)
-- [x] Agregar consulta desde la ficha del paciente
-- [x] Ver historial completo de consultas de un paciente, ordenado por fecha
-- [x] Ver detalle de una consulta individual
-- [x] Editar/corregir una consulta ya cargada
+```bash
+docker compose exec web python scripts/crear_usuario.py
+```
 
-### Etapa 3 — Login y seguridad
-- [ ] Modelo de Usuario (mi hermana, por ahora una sola cuenta)
-- [ ] Login con sesión
-- [ ] Proteger todas las rutas de pacientes/consultas detrás del login
-- [ ] Logout
+## Deploy en producción
 
-### Etapa 4 — Extra para portfolio (elegir una)
-- [ ] Opción A: Exportar historial de un paciente a PDF
-- [ ] Opción B: Dashboard simple (consultas por mes, diagnósticos más
-  frecuentes) usando Pandas
+Ver [DEPLOY.md](DEPLOY.md) para la guía completa con Nginx + HTTPS (Let's Encrypt).
 
-### Etapa 5 — Deploy
-- [ ] Subir el código a un repo de GitHub propio
-- [ ] Deploy en un hosting (Railway, Render o un VPS chico)
-- [ ] Probar que mi hermana pueda entrar desde su celular/notebook con
-  internet, desde cualquier lugar
-- [ ] README claro en el repo (qué es, stack, cómo correrlo) — esto también
-  suma para CV
+## Seguridad implementada
 
-## 7. Auditoría de código (junio 2026)
+- Contraseñas con bcrypt (nunca en texto plano)
+- Sesiones firmadas con `itsdangerous` (HMAC)
+- Protección CSRF en todos los formularios
+- Uploads de imágenes servidos solo a usuarios autenticados
+- Roles: admin puede gestionar usuarios, médico solo accede al sistema clínico
+- Headers de seguridad en Nginx (HSTS, X-Frame-Options, X-Content-Type-Options)
 
-Antes de avanzar a login y deploy, se hizo una revisión completa del código
-existente — corriendo cada flujo de verdad (no solo leyendo), para encontrar
-bugs reales antes de construir más funcionalidad encima.
+## Backups
 
-**Bugs corregidos:**
-- 🔴 **Crítico:** el `docker-compose.yml` no tenía volumen persistente para
-  Postgres — cualquier recreación del contenedor borraba todos los datos.
-  Se agregó un volumen nombrado (`db_data`).
-- 🟠 Los campos vacíos de paciente/consulta se mostraban como el texto
-  literal `"None"` en los formularios de edición (bug de Jinja2 al imprimir
-  valores `None` sin manejar). Corregido en `paciente_editar.html` y
-  `consulta_editar.html`.
-- 🟡 Referencia a un archivo `forms.css` que no existía y nunca se cargaba
-  (código muerto de una iteración anterior). Eliminada.
+Script PowerShell (`scripts/backup.ps1`) que hace `pg_dump` del contenedor Docker y guarda el `.sql` en Google Drive. Programado en el Programador de Tareas de Windows para correr diariamente. Mantiene los últimos 30 días y borra los más viejos automáticamente.
 
-**Mejoras de infraestructura y mantenibilidad:**
-- Se agregó `.gitignore` (faltaba) y se sacaron del repo 18 archivos
-  `__pycache__` que se habían colado en commits anteriores.
-- Se agregó `.dockerignore` para que la imagen de Docker no copie `.venv`,
-  `.git` y archivos de prueba locales (eran ~45 MB de más en cada build).
-- Se fijaron las versiones exactas en `requirements.txt` (antes sin pinear),
-  probadas de punta a punta antes de fijarlas, para builds reproducibles.
-- Se ordenaron los scripts de prueba manual en `scripts/`, separados del
-  código de producción.
+## Estado del proyecto
 
-## 8. Cómo se habla de esto en el CV / entrevista
+- [x] Gestión completa de pacientes y consultas
+- [x] Registro fotográfico de lesiones
+- [x] Autenticación y seguridad
+- [x] Múltiples usuarios con roles
+- [x] Dashboard clínico con alertas
+- [x] Calendario de controles
+- [x] Exportación Excel / CSV
+- [x] Impresión de ficha
+- [x] Responsive para tablet
+- [x] Backups automáticos
+- [x] Configuración de producción lista (Nginx + Certbot)
+- [ ] Deploy en VPS con HTTPS
 
-- "Diseñé y desarrollé un sistema de historias clínicas electrónicas con
-  FastAPI, PostgreSQL y Docker, en uso real por una médica."
-- Permite hablar de: modelado de datos, autenticación, decisiones de
-  arquitectura (por qué Jinja2+HTMX en vez de SPA), manejo de datos
-  sensibles, deploy con contenedores.
-- A diferencia de instalar un sistema ya hecho, todo el código y las
-  decisiones son propias y se pueden explicar en detalle.
-- La auditoría de código (sección 7) también es material de entrevista: poder
-  explicar cómo se encontró y corrigió un riesgo real de pérdida de datos
-  (volumen de Docker faltante) antes de que pasara con datos de pacientes
-  reales, demuestra criterio, no solo capacidad de escribir código nuevo.
+## Autoría
 
-## 9. Próximo paso inmediato
+Desarrollado por **Maria Paula Veram** con asistencia de [Claude](https://claude.ai) (Anthropic) para acelerar el desarrollo.
 
-Etapas 0, 1 y 2 completas y auditadas. Lo que sigue:
-- **Etapa 3** — Login y seguridad (todavía no empezada: el sistema hoy es
-  accesible sin autenticación, válido para desarrollo local pero no para
-  producción).
-- **Etapa 4** — Elegir entre exportar a PDF o dashboard con Pandas.
-- **Etapa 5** — Deploy a un hosting real con Postgres administrado (Railway,
-  Render, Supabase o Neon), para que sea accesible desde cualquier lugar
-  con internet, no solo en `localhost`.
+Las decisiones de arquitectura, el diseño del modelo de datos, los requisitos clínicos y la dirección del proyecto son propios. Claude funcionó como herramienta de desarrollo — equivalente a un pair programmer — generando y revisando código bajo criterio propio.
 
-  tambien faltaria Ficha clínica con seguimiento fotográfico de lesiones
-En dermatología, la imagen vale más que mil palabras. Medilink te permite adjuntar fotografías clínicas directamente en la ficha del paciente para comparar la evolución de una lesión consulta a consulta.
+## Licencia
 
-Registra diagnósticos CIE-10, tratamientos tópicos, sistémicos y procedimientos realizados, todo organizado por fecha y área corporal.
-
-Registro fotográfico de lesiones por zona corporal
-Historial de tratamientos tópicos y sistémicos
-Ficha personalizable con diagnósticos dermatológicos
+MIT — ver [LICENSE](LICENSE).
