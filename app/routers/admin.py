@@ -94,6 +94,26 @@ def cambiar_rol(
     return RedirectResponse(url="/admin/usuarios", status_code=303)
 
 
+@router.post("/fix-fechas-demo")
+def fix_fechas_demo(
+    request: Request,
+    csrf_token: str = Form(default=""),
+    db: Session = Depends(database.get_db),
+):
+    """Actualiza las fechas de las primeras 3 consultas al mes actual para el dashboard."""
+    check_csrf(csrf_token, request)
+    hoy = date.today()
+    consultas = db.query(models.Consulta).order_by(models.Consulta.fecha.asc()).limit(5).all()
+    nuevas_fechas = [hoy, hoy - timedelta(days=1), hoy - timedelta(days=2),
+                     hoy - timedelta(days=3), hoy - timedelta(days=4)]
+    for i, consulta in enumerate(consultas):
+        consulta.fecha = nuevas_fechas[i]
+    db.commit()
+    response = RedirectResponse(url="/", status_code=303)
+    set_flash_message(response, f"✓ Fechas de {len(consultas)} consultas actualizadas al mes actual.")
+    return response
+
+
 @router.post("/seed-demo")
 def seed_demo(
     request: Request,
@@ -145,7 +165,7 @@ def seed_demo(
 
     CONSULTAS = [
         # Ana García — acné + seguimiento
-        dict(paciente_idx=0, fecha=hoy - timedelta(days=45), proximo_control=hoy + timedelta(days=15),
+        dict(paciente_idx=0, fecha=hoy - timedelta(days=3), proximo_control=hoy + timedelta(days=45),
              motivo="Acné inflamatorio en cara y espalda",
              duracion="2 años de evolución, empeoró en los últimos 3 meses",
              sintomas="Pápulas y pústulas dolorosas en mejillas, frente y zona superior de la espalda. Sin comedones cerrados importantes.",
@@ -157,7 +177,7 @@ def seed_demo(
              tratamiento="Adapaleno 0.1% gel + Clindamicina 1% gel (noche). Protector solar FPS50 diario.",
              recomendaciones="Evitar manipulación de lesiones. No usar productos oclusivos. Hidratante no comedogénico.",
              notas="Paciente muy motivada. Reevaluar en 6 semanas."),
-        dict(paciente_idx=0, fecha=hoy - timedelta(days=10), proximo_control=hoy + timedelta(days=50),
+        dict(paciente_idx=0, fecha=hoy - timedelta(days=1), proximo_control=hoy + timedelta(days=50),
              motivo="Control acné — respuesta a tratamiento",
              duracion="Seguimiento",
              sintomas="Reducción del 60% de lesiones inflamatorias. Leve descamación por adapaleno.",
@@ -199,7 +219,7 @@ def seed_demo(
              notas="Control vencido — LLAMAR PARA REPROGRAMAR."),
 
         # Roberto Sosa — keratosis actínica
-        dict(paciente_idx=3, fecha=hoy - timedelta(days=20), proximo_control=hoy + timedelta(days=160),
+        dict(paciente_idx=3, fecha=hoy - timedelta(days=2), proximo_control=hoy + timedelta(days=160),
              motivo="Control anual. Revisión de queratosis actínicas.",
              duracion="Diagnóstico previo de QA hace 2 años.",
              sintomas="3 lesiones nuevas en zona calva (vértex). Ásperas al tacto, eritematosas.",
@@ -216,7 +236,7 @@ def seed_demo(
              notas="Paciente comprometido con el tratamiento luego de explicar riesgo de progresión."),
 
         # Valentina Torres — nevus
-        dict(paciente_idx=4, fecha=hoy - timedelta(days=5), proximo_control=hoy + timedelta(days=355),
+        dict(paciente_idx=4, fecha=hoy - timedelta(days=0), proximo_control=hoy + timedelta(days=355),
              motivo="Primera consulta. Revisión de manchas en espalda.",
              duracion="Lunares presentes desde la adolescencia. Sin cambios referidos.",
              sintomas="Múltiples nevus melanocíticos en tronco. Refiere uno en espalda alta que 'cambió de color'.",

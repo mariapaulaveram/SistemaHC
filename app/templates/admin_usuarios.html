@@ -115,6 +115,19 @@
     </form>
 </div>
 
+{# ── Arreglar fechas de consultas demo ── #}
+<div class="card" style="margin-bottom:16px">
+    <div class="pl-header">
+        <h2 class="pl-title">Arreglar fechas del dashboard</h2>
+    </div>
+    <p style="margin:0 0 12px;color:#666;font-size:14px">Mueve las primeras 5 consultas al mes actual para que el dashboard muestre consultas "este mes".</p>
+    <form method="post" action="/admin/fix-fechas-demo"
+          onsubmit="return confirm('¿Actualizar las fechas de las consultas al mes actual?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-secondary">Arreglar fechas</button>
+    </form>
+</div>
+
 {# ── Cargar datos de demo ── #}
 <div class="card">
     <div class="pl-header">
