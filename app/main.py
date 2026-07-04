@@ -30,6 +30,30 @@ def fecha_es(d):
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(redirect_slashes=False)
+
+
+@app.on_event("startup")
+def crear_admin_inicial():
+    """Si ADMIN_EMAIL y ADMIN_PASSWORD están definidos y no hay usuarios, crea el admin."""
+    from .auth import hash_password
+    admin_email = os.getenv("ADMIN_EMAIL")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    if not admin_email or not admin_password:
+        return
+    from .database import SessionLocal
+    db = SessionLocal()
+    try:
+        if db.query(models.Usuario).count() == 0:
+            usuario = models.Usuario(
+                email=admin_email,
+                hashed_password=hash_password(admin_password),
+                rol="admin",
+            )
+            db.add(usuario)
+            db.commit()
+            print(f"[startup] Usuario admin creado: {admin_email}")
+    finally:
+        db.close()
 templates = make_templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 app.mount(
